@@ -1,9 +1,12 @@
-// src/app/Register.tsx
-import { Link } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { Scissors } from 'lucide-react-native';
 import CustomInput from '../components/inputs/CustomInput';
 import CustomMaskInput from '../components/inputs/CustomMaskInput';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import APIService from '../services/APIService';
 
 export default function Register() {
   const [step, setStep] = useState(1);
@@ -16,8 +19,16 @@ export default function Register() {
   const [neighborhood, setNeighborhood] = useState('');
   const [cep, setCep] = useState('');
   const [securityKey, setSecurityKey] = useState('');
+  const [password, setPassword] = useState('');
 
-  const handleNext = () => {
+  const router = useRouter();
+
+  function convertToISODate(dateStr: string): string {
+  const [day, month, year] = dateStr.split('/');
+  return `${year}-${month}-${day}`;
+  }
+
+  const handleNext = async () => {
     if (step === 1) {
       if (!name || !cpf || !birthdate || !email) {
         Alert.alert("Preencha todos os campos obrigatórios.");
@@ -28,126 +39,94 @@ export default function Register() {
         Alert.alert("E-mail inválido.");
         return;
       }
+
       setStep(2);
     } else {
-      if (!address || !number || !neighborhood || !cep || !securityKey) {
+      if (!address || !number || !neighborhood || !cep || !securityKey || !password) {
         Alert.alert("Preencha todos os campos obrigatórios.");
         return;
       }
-      console.log({
-        name,
-        cpf,
-        birthdate,
-        email,
-        address,
-        number,
-        neighborhood,
-        cep,
-        securityKey,
-      });
-      Alert.alert("Cadastro concluído! Redirecionando para o login...");
+
+      try {
+        await APIService.cliente.create({
+          name,
+          email,
+          senha: password,
+          CPF: cpf,
+          dataNascimento: convertToISODate(birthdate),
+          chaveSeguraRecuperaSenha: securityKey,
+          endereco: `${address}, ${number}, ${neighborhood}, ${cep}`,
+          role: 'cliente',
+        });
+
+        Alert.alert("Cadastro concluído!", "Redirecionando para o login...");
+        router.replace("/login");
+      } catch (error) {
+        Alert.alert("Erro ao cadastrar", "Tente novamente mais tarde.");
+        console.error("Erro no cadastro:", error);
+      }
     }
   };
 
   return (
-    <View className="flex-1 bg-white relative">
-      <Image
-        source={require('../assets/barbershop.jpg')}
-        className="absolute inset-0 w-full h-full opacity-50"
-        resizeMode="cover"
-      />
+    <View className="flex-1 bg-white">
+      <Header />
 
-      <View className="flex-1 justify-center px-6">
-        <View className="items-center mb-8">
-          <Text className="text-2xl font-bold text-gray-800 mb-2">
-            Registrar
-          </Text>
-        </View>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ alignItems: 'center', paddingVertical: 20, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <View className="flex-row items-center mb-4">
+            <Scissors className="h-6 w-6 text-barber-gold" />
+            <Text className="text-xl font-bold ml-2">JP Barbearia</Text>
+          </View>
 
-        <View className="w-full max-w-xs mx-auto">
-          {step === 1 && (
-           <>
-              <CustomInput
-                placeholder="Nome"
-                value={name}
-                onChangeText={setName}
-                secureTextEntry={false}
-              />
-              <CustomMaskInput
-                placeholder="CPF"
-                value={cpf}
-                onChangeText={(masked) => setCpf(masked)}
-                maskType="cpf"
-                keyboardType="numeric"
-              />
-              <CustomMaskInput
-                placeholder="Data de Nascimento (DD/MM/AAAA)"
-                value={birthdate}
-                onChangeText={(masked) => setBirthdate(masked)}
-                maskType="date"
-                keyboardType="numeric"
-              />
-              <CustomInput
-                placeholder="E-mail"
-                value={email}
-                onChangeText={setEmail}
-                secureTextEntry={false}
-              />
-            </>
-          )}
-          
-          {step === 2 && (
-            <>
-              <CustomInput
-                placeholder="Endereço (Rua)"
-                value={address}
-                onChangeText={setAddress}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="Número"
-                value={number}
-                onChangeText={setNumber}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="Bairro"
-                value={neighborhood}
-                onChangeText={setNeighborhood}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="CEP"
-                value={cep}
-                onChangeText={setCep}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="Chave de Segurança"
-                value={securityKey}
-                onChangeText={setSecurityKey}
-                secureTextEntry={false}
-              />
-            </>
-          )}
+          <View className="space-y-4">
+            {step === 1 ? (
+              <>
+                <CustomInput placeholder="Nome" value={name} onChangeText={setName} />
+                <CustomMaskInput placeholder="CPF" value={cpf} onChangeText={setCpf} maskType="cpf" keyboardType="numeric" />
+                <CustomMaskInput placeholder="Data de Nascimento (DD/MM/AAAA)" value={birthdate} onChangeText={setBirthdate} maskType="date" keyboardType="numeric" />
+                <CustomInput placeholder="E-mail" value={email} onChangeText={setEmail} />
+              </>
+            ) : (
+              <>
+                <CustomInput placeholder="Endereço (Rua)" value={address} onChangeText={setAddress} />
+                <CustomInput placeholder="Número" value={number} onChangeText={setNumber} />
+                <CustomInput placeholder="Bairro" value={neighborhood} onChangeText={setNeighborhood} />
+                <CustomInput placeholder="CEP" value={cep} onChangeText={setCep} />
+                <CustomInput placeholder="Chave de Segurança" value={securityKey} onChangeText={setSecurityKey} />
+                <CustomInput placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry />
+              </>
+            )}
 
-          <TouchableOpacity 
-            className="bg-gray-100 rounded-lg py-2 items-center mb-4"
-            onPress={handleNext}
-          >
-            <Text className="text-gray-800 font-semibold text-base">
-              {step === 1 ? 'Avançar' : 'Finalizar Cadastro'}
-            </Text>
-          </TouchableOpacity>
-          {step === 2 && (
-            <Link href="/login" asChild>
-              <TouchableOpacity className="bg-blue-600 rounded-lg py-2 items-center mb-4">
-                <Text className="text-white font-semibold text-base">Ir para Login</Text>
+            <TouchableOpacity
+              onPress={handleNext}
+              className="bg-yellow-500 hover:bg-yellow-400 rounded-lg px-6 py-2 mx-auto w-40"
+            >
+              <Text className="text-black font-semibold text-base text-center">
+                {step === 1 ? 'Avançar' : 'Cadastrar'}
+              </Text>
+            </TouchableOpacity>
+
+            {step === 2 && (
+              <TouchableOpacity
+                onPress={() => router.replace('/login')}
+                className="bg-yellow-500 hover:bg-yellow-400 rounded-lg px-6 py-2 mx-auto w-40"
+              >
+                <Text className="text-black font-semibold text-base text-center">
+                  Ir para Login
+                </Text>
               </TouchableOpacity>
-            </Link>
-          )}
+            )}
+          </View>
         </View>
-      </View>
+
+        <View className="h-10" />
+        <Footer />
+      </ScrollView>
     </View>
   );
 }
