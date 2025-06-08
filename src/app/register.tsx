@@ -1,28 +1,39 @@
+ 
 // src/app/Register.tsx
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, Platform, Text, TouchableOpacity, View } from 'react-native';
-import CustomInput from '../components/inputs/CustomInput';
-import CustomMaskInput from '../components/inputs/CustomMaskInput';
+import { } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { getAuth, createUserWithEmailAndPassword, User } from 'firebase/auth';
 import app from '../services/firebase';
+import {  Alert, Image, Platform, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { Scissors } from 'lucide-react-native';
+import CustomInput from '../components/inputs/CustomInput';
+import CustomMaskInput from '../components/inputs/CustomMaskInput';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import APIService from '../services/APIService';
 
 export default function Register() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [cpf, setCpf] = useState('');
-  const [dataNascimento, setdataNascimento] = useState('');
+  const [birthdate, setBirthdate] = useState('');
   const [email, setEmail] = useState('');
-  const [endereco, setendereco] = useState('');
+  const [address, setAddress] = useState('');
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [cep, setCep] = useState('');
-  const [senha, setsenha] = useState('');
-  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
+  const [securityKey, setSecurityKey] = useState('');
+  const [password, setPassword] = useState('');
 
   const auth = getAuth(app);
-
+  
+  function convertToISODate(dateStr: string): string {
+    const [day, month, year] = dateStr.split('/');
+    return `${year}-${month}-${day}`;
+  }
   const handleNext = () => {
     if (step === 1) {
       if (!name || !cpf || !dataNascimento || !email) {
@@ -69,25 +80,19 @@ export default function Register() {
 
       console.log("Usuário criado:", userCredential.user.uid);
 
-      const response = await fetch("http://localhost:5000/api/clientes/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          firebase_uid: userCredential.user.uid,
+      await APIService.cliente.create({
           name,
-          cpf,
-          dataNascimento,
           email,
-          endereco,
-          number,
-          neighborhood,
-          cep,
-          senha,
-          role: "client"
-        })
-      });
+          senha: password,
+          CPF: cpf,
+          dataNascimento: convertToISODate(birthdate),
+          chaveSeguraRecuperaSenha: securityKey,
+          endereco: `${address}, ${number}, ${neighborhood}, ${cep}`,
+          role: 'cliente',
+        });
+
+        Alert.alert("Cadastro concluído!", "Redirecionando para o login...");
+        router.replace("/login");
       if (!response.ok) {
         throw new Error("Erro ao registrar no banco");
       }
@@ -121,109 +126,66 @@ export default function Register() {
           Alert.alert("Erro", "Erro ao registrar usuário.");
       }
     }
-
-
   };
   return (
-    <View className="flex-1 bg-white relative">
-      <Image
-        source={require('../assets/barbershop.jpg')}
-        className="absolute inset-0 w-full h-full opacity-50"
-        resizeMode="cover"
-      />
+    <View className="flex-1 bg-white">
+      <Header />
 
-      <View className="flex-1 justify-center px-6">
-        <View className="items-center mb-8">
-          <Text className="text-2xl font-bold text-gray-800 mb-2">
-            Registrar
-          </Text>
-        </View>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ alignItems: 'center', paddingVertical: 20, paddingHorizontal: 16 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
+          <View className="flex-row items-center mb-4">
+            <Scissors className="h-6 w-6 text-barber-gold" />
+            <Text className="text-xl font-bold ml-2">JP Barbearia</Text>
+          </View>
 
-        <View className="w-full max-w-xs mx-auto">
-          {step === 1 && (
-            <>
-              <CustomInput
-                placeholder="Nome"
-                value={name}
-                onChangeText={setName}
-                secureTextEntry={false}
-              />
-              <CustomMaskInput
-                placeholder="CPF"
-                value={cpf}
-                onChangeText={(masked) => setCpf(masked)}
-                maskType="cpf"
-                keyboardType="numeric"
-              />
-              <CustomMaskInput
-                placeholder="Data de Nascimento (DD/MM/AAAA)"
-                value={dataNascimento}
-                onChangeText={(masked) => setdataNascimento(masked)}
-                maskType="date"
-                keyboardType="numeric"
-              />
-              <CustomInput
-                placeholder="E-mail"
-                value={email}
-                onChangeText={setEmail}
-                secureTextEntry={false}
-              />
-            </>
-          )}
+          <View className="space-y-4">
+            {step === 1 ? (
+              <>
+                <CustomInput placeholder="Nome" value={name} onChangeText={setName} />
+                <CustomMaskInput placeholder="CPF" value={cpf} onChangeText={setCpf} maskType="cpf" keyboardType="numeric" />
+                <CustomMaskInput placeholder="Data de Nascimento (DD/MM/AAAA)" value={birthdate} onChangeText={setBirthdate} maskType="date" keyboardType="numeric" />
+                <CustomInput placeholder="E-mail" value={email} onChangeText={setEmail} />
+              </>
+            ) : (
+              <>
+                <CustomInput placeholder="Endereço (Rua)" value={address} onChangeText={setAddress} />
+                <CustomInput placeholder="Número" value={number} onChangeText={setNumber} />
+                <CustomInput placeholder="Bairro" value={neighborhood} onChangeText={setNeighborhood} />
+                <CustomInput placeholder="CEP" value={cep} onChangeText={setCep} />
+                <CustomInput placeholder="Chave de Segurança" value={securityKey} onChangeText={setSecurityKey} />
+                <CustomInput placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry />
+              </>
+            )}
 
-          {step === 2 && (
-            <>
-              <CustomInput
-                placeholder="Endereço (Rua)"
-                value={endereco}
-                onChangeText={setendereco}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="Número"
-                value={number}
-                onChangeText={setNumber}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="Bairro"
-                value={neighborhood}
-                onChangeText={setNeighborhood}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="CEP"
-                value={cep}
-                onChangeText={setCep}
-                secureTextEntry={false}
-              />
-              <CustomInput
-                placeholder="senha"
-                value={senha}
-                onChangeText={setsenha}
-                secureTextEntry={false}
-              />
-            </>
-          )}
+            <TouchableOpacity
+              onPress={handleNext}
+              className="bg-yellow-500 hover:bg-yellow-400 rounded-lg px-6 py-2 mx-auto w-40"
+            >
+              <Text className="text-black font-semibold text-base text-center">
+                {step === 1 ? 'Avançar' : 'Cadastrar'}
+              </Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            className="bg-gray-100 rounded-lg py-2 items-center mb-4"
-            onPress={step === 1 ? handleNext : handleRegister}
-          >
-            <Text className="text-gray-800 font-semibold text-base">
-              {step === 1 ? 'Avançar' : 'Finalizar Cadastro'}
-            </Text>
-          </TouchableOpacity>
-
-          {step === 2 && (
-            <Link href="/login" asChild>
-              <TouchableOpacity className="bg-blue-600 rounded-lg py-2 items-center mb-4">
-                <Text className="text-white font-semibold text-base">Ir para Login</Text>
+            {step === 2 && (
+              <TouchableOpacity
+                onPress={() => router.replace('/login')}
+                className="bg-yellow-500 hover:bg-yellow-400 rounded-lg px-6 py-2 mx-auto w-40"
+              >
+                <Text className="text-black font-semibold text-base text-center">
+                  Ir para Login
+                </Text>
               </TouchableOpacity>
-            </Link>
-          )}
+            )}
+          </View>
         </View>
-      </View>
+
+        <View className="h-10" />
+        <Footer />
+      </ScrollView>
     </View>
   );
 }
