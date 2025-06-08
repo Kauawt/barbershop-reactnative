@@ -4,6 +4,9 @@ import { Text, TouchableOpacity, View, TextInput, Alert } from 'react-native';
 import { Scissors, Loader2 } from "lucide-react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import app from '../app/services/firebase';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import * as SecureStore from 'expo-secure-store';
 
 export default function Login() {
   const [isLoginTab, setIsLoginTab] = useState(true);
@@ -11,27 +14,42 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const router = useRouter();
 
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    
-    try {
-      if (isLoginTab) {
-        if (password === "123") {
-          router.replace("/");
-        } else {
-          Alert.alert("Erro", "Senha incorreta!");
-        }
-      } else {
-        Alert.alert("Registro realizado com sucesso!");
-        router.replace("/");
-      }
-    } finally {
-      setIsSubmitting(false);
+  const router = useRouter();
+  const auth = getAuth(app);
+
+const handleSubmit = async () => {
+  if (!email || !password) {
+    Alert.alert("Erro", "Preencha todos os campos.");
+    return;
+  }
+
+  setIsSubmitting(true);
+
+  try {
+    if (isLoginTab) {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log("Usuário logado:", userCredential.user);
+
+      await SecureStore.setItemAsync('token', userCredential.user.uid);
+
+      router.replace("/");
+    } else {
+      const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log("Usuário cadastrado:", newUserCredential.user);
+
+      await SecureStore.setItemAsync('token', newUserCredential.user.uid);
+
+      Alert.alert("Cadastro realizado com sucesso!");
+      router.replace("/");
     }
-  };
+  } catch (error: any) {
+    console.error(error);
+    Alert.alert("Erro", error.message || "Erro ao autenticar.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <View className="flex-1">
@@ -42,7 +60,7 @@ export default function Login() {
             <Scissors className="h-6 w-6 text-barber-gold" />
             <Text className="text-xl font-bold ml-2">BarberAgendaPro</Text>
           </View>
-          
+
           {isLoginTab ? (
             <View className="space-y-4">
               <TextInput
@@ -66,12 +84,12 @@ export default function Login() {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <View className="flex flex-row items-center">
+                  <View className="flex flex-row items-center justify-center">
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     <Text>Entrando...</Text>
                   </View>
                 ) : (
-                  <Text>Entrar</Text>
+                  <Text className="text-white text-center">Entrar</Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setIsLoginTab(false)}>
@@ -106,12 +124,12 @@ export default function Login() {
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <View className="flex flex-row items-center">
+                  <View className="flex flex-row items-center justify-center">
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     <Text>Cadastrando...</Text>
                   </View>
                 ) : (
-                  <Text>Cadastrar</Text>
+                  <Text className="text-white text-center">Cadastrar</Text>
                 )}
               </TouchableOpacity>
               <TouchableOpacity onPress={() => setIsLoginTab(true)}>
