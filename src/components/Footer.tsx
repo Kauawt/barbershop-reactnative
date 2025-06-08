@@ -6,6 +6,8 @@ import { Scissors } from "lucide-react-native";
 const Footer = () => {
   const router = useRouter();
 
+
+const Footer = () => {
   return (
     <View className="bg-black py-8 px-4">
       <View className="max-w-6xl mx-auto">
@@ -14,6 +16,7 @@ const Footer = () => {
             <View className="flex flex-row items-center mb-4">
               <Scissors className="h-6 w-6 text-yellow-500" />
               <Text className="text-white text-xl font-bold ml-2">Inova Barbearia</Text>
+
             </View>
             <Text className="text-gray-300 text-center md:text-left max-w-xs">
               A melhor experiência em barbearia com agendamento online fácil e rápido.
@@ -34,6 +37,7 @@ const Footer = () => {
                   <Text className="text-gray-300">Barbeiros</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => router.push("/agendamento")}>
+
                   <Text className="text-gray-300">Agendar</Text>
                 </TouchableOpacity>
               </View>
@@ -46,6 +50,7 @@ const Footer = () => {
                 <Text className="text-gray-300">Indaiatuba - SP</Text>
                 <Text className="text-gray-300">(11) 99880-0206</Text>
                 <Text className="text-gray-300">inova_barber@gmail.com</Text>
+
               </View>
             </View>
           </View>
@@ -59,5 +64,4 @@ const Footer = () => {
     </View>
   );
 };
-
 export default Footer;

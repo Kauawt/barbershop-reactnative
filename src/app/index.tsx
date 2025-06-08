@@ -1,3 +1,4 @@
+
 import React from "react";
 import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { useRouter } from 'expo-router';
@@ -130,5 +131,6 @@ const FeatureCard = ({ title, description, icon }) => (
     <Text className="text-gray-600 text-sm">{description}</Text>
   </View>
 );
+
 
 export default Index;

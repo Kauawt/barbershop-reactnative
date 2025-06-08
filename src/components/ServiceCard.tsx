@@ -3,6 +3,7 @@ import { TouchableOpacity, View, Text, Image } from "react-native";
 import { Service } from "../types";
 import { useRouter } from 'expo-router';
 
+
 interface ServiceCardProps {
   service: Service;
   showBookButton?: boolean;
@@ -28,6 +29,7 @@ const ServiceCard = ({ service, showBookButton = true }: ServiceCardProps) => {
         <View className="flex-row justify-between items-center">
           <Text className="text-barber-accent">{service.duration} min</Text>
           <Text className="text-yellow-500 font-bold">R$ {service.price.toFixed(2)}</Text>
+
         </View>
         <Text className="text-gray-600">{service.description}</Text>
       </View>
@@ -37,6 +39,7 @@ const ServiceCard = ({ service, showBookButton = true }: ServiceCardProps) => {
           className="bg-barber-dark text-white p-3 rounded-lg mt-2"
         >
           <Text className="text-center text-black font-semibold">Agendar Agora</Text>
+
         </TouchableOpacity>
       )}
     </View>
