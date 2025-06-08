@@ -1,69 +1,73 @@
 // src/app/Register.tsx
 import { Link } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Platform, Text, TouchableOpacity, View } from 'react-native';
 import CustomInput from '../components/inputs/CustomInput';
 import CustomMaskInput from '../components/inputs/CustomMaskInput';
 import * as SecureStore from 'expo-secure-store';
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import app from '../app/services/firebase';
+import { getAuth, createUserWithEmailAndPassword, User } from 'firebase/auth';
+import app from '../services/firebase';
 
 export default function Register() {
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [cpf, setCpf] = useState('');
-  const [birthdate, setBirthdate] = useState('');
+  const [dataNascimento, setdataNascimento] = useState('');
   const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
+  const [endereco, setendereco] = useState('');
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [cep, setCep] = useState('');
-  const [securityKey, setSecurityKey] = useState('');
+  const [senha, setsenha] = useState('');
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
 
   const auth = getAuth(app);
 
   const handleNext = () => {
     if (step === 1) {
-      if (!name || !cpf || !birthdate || !email) {
+      if (!name || !cpf || !dataNascimento || !email) {
         Alert.alert("Preencha todos os campos obrigatórios.");
+        console.log("Preencha todos os campos")
         return;
       }
 
       if (!/\S+@\S+\.\S+/.test(email)) {
         Alert.alert("E-mail inválido.");
+        console.log("email inválido")
         return;
       }
       setStep(2);
     } else {
-      if (!address || !number || !neighborhood || !cep || !securityKey) {
+      if (!endereco || !number || !neighborhood || !cep || !senha) {
         Alert.alert("Preencha todos os campos obrigatórios.");
         return;
       }
       console.log({
         name,
         cpf,
-        birthdate,
+        dataNascimento,
         email,
-        address,
+        endereco,
         number,
         neighborhood,
         cep,
-        securityKey,
+        senha,
       });
+
       Alert.alert("Cadastro concluído! Redirecionando para o login...");
     }
   }
   const handleRegister = async () => {
-    if (!address || !number || !neighborhood || !cep || !securityKey) {
+    if (!endereco || !number || !neighborhood || !cep || !senha) {
       Alert.alert("Preencha todos os campos obrigatórios.");
       return;
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, securityKey);
-      const firebaseUser = userCredential.user;
+      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      setFirebaseUser(userCredential.user);
 
-      await SecureStore.setItemAsync("token", firebaseUser.uid);
+      console.log("Usuário criado:", userCredential.user.uid);
 
       const response = await fetch("http://localhost:5000/api/clientes/", {
         method: "POST",
@@ -71,28 +75,54 @@ export default function Register() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          firebase_uid: firebaseUser.uid,
+          firebase_uid: userCredential.user.uid,
           name,
           cpf,
-          birthdate,
+          dataNascimento,
           email,
-          address,
+          endereco,
           number,
           neighborhood,
           cep,
+          senha,
           role: "client"
         })
       });
-
       if (!response.ok) {
         throw new Error("Erro ao registrar no banco");
       }
 
-      Alert.alert("Cadastro realizado com sucesso!");
+      alert("Cadastro realizado com sucesso!");
+
+      if (Platform.OS !== 'web') {
+        if (firebaseUser) {
+          await SecureStore.setItemAsync("token", userCredential.user.uid);
+        }
+      }
     } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+
+      console.error("Erro ao registrar:", errorCode, errorMessage);
       console.error("Erro no registro:", error);
       Alert.alert("Erro", error.message || "Erro ao registrar.");
+
+      switch (errorCode) {
+        case "auth/email-already-in-use":
+          Alert.alert("Erro", "Este e-mail já está em uso.");
+          break;
+        case "auth/invalid-email":
+          Alert.alert("Erro", "E-mail inválido.");
+          break;
+        case "auth/weak-password":
+          Alert.alert("Erro", "A senha é muito fraca.");
+          break;
+        default:
+          Alert.alert("Erro", "Erro ao registrar usuário.");
+      }
     }
+
+
   };
   return (
     <View className="flex-1 bg-white relative">
@@ -127,8 +157,8 @@ export default function Register() {
               />
               <CustomMaskInput
                 placeholder="Data de Nascimento (DD/MM/AAAA)"
-                value={birthdate}
-                onChangeText={(masked) => setBirthdate(masked)}
+                value={dataNascimento}
+                onChangeText={(masked) => setdataNascimento(masked)}
                 maskType="date"
                 keyboardType="numeric"
               />
@@ -145,8 +175,8 @@ export default function Register() {
             <>
               <CustomInput
                 placeholder="Endereço (Rua)"
-                value={address}
-                onChangeText={setAddress}
+                value={endereco}
+                onChangeText={setendereco}
                 secureTextEntry={false}
               />
               <CustomInput
@@ -168,9 +198,9 @@ export default function Register() {
                 secureTextEntry={false}
               />
               <CustomInput
-                placeholder="Chave de Segurança"
-                value={securityKey}
-                onChangeText={setSecurityKey}
+                placeholder="senha"
+                value={senha}
+                onChangeText={setsenha}
                 secureTextEntry={false}
               />
             </>

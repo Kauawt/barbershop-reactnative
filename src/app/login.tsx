@@ -1,10 +1,10 @@
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Text, TouchableOpacity, View, TextInput, Alert } from 'react-native';
+import { Text, TouchableOpacity, View, TextInput, Alert, Platform } from 'react-native';
 import { Scissors, Loader2 } from "lucide-react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import app from '../app/services/firebase';
+import app from '../services/firebase';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import * as SecureStore from 'expo-secure-store';
 
@@ -18,38 +18,41 @@ export default function Login() {
   const router = useRouter();
   const auth = getAuth(app);
 
-const handleSubmit = async () => {
-  if (!email || !password) {
-    Alert.alert("Erro", "Preencha todos os campos.");
-    return;
-  }
-
-  setIsSubmitting(true);
-
-  try {
-    if (isLoginTab) {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Usuário logado:", userCredential.user);
-
-      await SecureStore.setItemAsync('token', userCredential.user.uid);
-
-      router.replace("/");
-    } else {
-      const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
-      console.log("Usuário cadastrado:", newUserCredential.user);
-
-      await SecureStore.setItemAsync('token', newUserCredential.user.uid);
-
-      Alert.alert("Cadastro realizado com sucesso!");
-      router.replace("/");
+  const handleSubmit = async () => {
+    if (!email || !password) {
+      Alert.alert("Erro", "Preencha todos os campos.");
+      return;
     }
-  } catch (error: any) {
-    console.error(error);
-    Alert.alert("Erro", error.message || "Erro ao autenticar.");
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+
+    setIsSubmitting(true);
+
+    try {
+      if (isLoginTab) {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log("Usuário logado:", userCredential.user);
+
+        if (Platform.OS !== 'web') {
+          await SecureStore.setItemAsync('token', userCredential.user.uid);
+        }
+        await SecureStore.setItemAsync('token', userCredential.user.uid);
+
+        router.replace("/");
+      } else {
+        const newUserCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log("Usuário cadastrado:", newUserCredential.user);
+
+        await SecureStore.setItemAsync('token', newUserCredential.user.uid);
+
+        Alert.alert("Cadastro realizado com sucesso!");
+        router.replace("/");
+      }
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Erro", error.message || "Erro ao autenticar.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <View className="flex-1">
