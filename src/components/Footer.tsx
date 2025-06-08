@@ -1,6 +1,11 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Linking } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
+import { useRouter } from "expo-router";
 import { Scissors } from "lucide-react-native";
+
+const Footer = () => {
+  const router = useRouter();
+
 
 const Footer = () => {
   return (
@@ -10,7 +15,8 @@ const Footer = () => {
           <View className="flex-1 items-center md:items-start">
             <View className="flex flex-row items-center mb-4">
               <Scissors className="h-6 w-6 text-yellow-500" />
-              <Text className="text-white text-xl font-bold ml-2">BarberAgendaPro</Text>
+              <Text className="text-white text-xl font-bold ml-2">Inova Barbearia</Text>
+
             </View>
             <Text className="text-gray-300 text-center md:text-left max-w-xs">
               A melhor experiência em barbearia com agendamento online fácil e rápido.
@@ -21,16 +27,17 @@ const Footer = () => {
             <View className="items-center md:items-start">
               <Text className="text-yellow-500 font-semibold mb-3">Links</Text>
               <View className="space-y-3">
-                <TouchableOpacity onPress={() => Linking.openURL('/')}>
+                <TouchableOpacity onPress={() => router.push("/")}>
                   <Text className="text-gray-300">Home</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('/services')}>
+                <TouchableOpacity onPress={() => router.push("/services")}>
                   <Text className="text-gray-300">Serviços</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('/barbers')}>
+                <TouchableOpacity onPress={() => router.push("/barbers")}>
                   <Text className="text-gray-300">Barbeiros</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('/appointment')}>
+                <TouchableOpacity onPress={() => router.push("/agendamento")}>
+
                   <Text className="text-gray-300">Agendar</Text>
                 </TouchableOpacity>
               </View>
@@ -39,22 +46,22 @@ const Footer = () => {
             <View className="items-center md:items-start">
               <Text className="text-yellow-500 font-semibold mb-3">Contato</Text>
               <View className="space-y-3">
-                <Text className="text-gray-300">Rua Exemplo, 123 - Centro</Text>
-                <Text className="text-gray-300">São Paulo - SP</Text>
-                <Text className="text-gray-300">(11) 99999-9999</Text>
-                <Text className="text-gray-300">contato@barbearia.com</Text>
+                <Text className="text-gray-300">Rua Dom Pedro I, 65 - Centro</Text>
+                <Text className="text-gray-300">Indaiatuba - SP</Text>
+                <Text className="text-gray-300">(11) 99880-0206</Text>
+                <Text className="text-gray-300">inova_barber@gmail.com</Text>
+
               </View>
             </View>
           </View>
         </View>
         <View className="border-t border-gray-700 pt-6">
           <Text className="text-gray-400 text-center">
-            &copy; {new Date().getFullYear()} BarberAgendaPro. Todos os direitos reservados.
+            &copy; {new Date().getFullYear()} InnovaTech Solutions. Todos os direitos reservados.
           </Text>
         </View>
       </View>
     </View>
   );
 };
-
 export default Footer;

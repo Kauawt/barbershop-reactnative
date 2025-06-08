@@ -20,16 +20,18 @@ export interface Barber {
   photo?: string;
   specialties?: string[];
   rating?: number;
-  userId?: string; // Relação com o usuário que é barbeiro
+  userId?: string;
 }
 
 export interface Service {
-  id: string;
+  id: string;       
   name: string;
-  description: string;
   price: number;
-  duration: number; // em minutos
+  duration: number; 
+  isActive: boolean;
   image?: string;
+  description?: string; 
+
 }
 
 export interface TimeSlot {
