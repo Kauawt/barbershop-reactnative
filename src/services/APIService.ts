@@ -19,6 +19,7 @@ const handleLogin = async () => {
   }
 };
 
+
 // Serviço de Agendamento
 const AgendamentoService = {
   getAll: async () => {
@@ -97,9 +98,9 @@ const ClienteService = {
     name: string;
     email: string;
     senha: string;
+    chaveSeguraRecuperaSenha: string;
     CPF: string;
     dataNascimento: string;
-    chaveSeguraRecuperaSenha: string;
     endereco: string;
     role: string;
   }) => {

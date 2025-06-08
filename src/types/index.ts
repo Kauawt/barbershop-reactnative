@@ -20,7 +20,7 @@ export interface Barber {
   photo?: string;
   specialties?: string[];
   rating?: number;
-  userId?: string; // Relação com o usuário que é barbeiro
+  userId?: string;
 }
 
 export interface Service {
@@ -31,6 +31,7 @@ export interface Service {
   isActive: boolean;
   image?: string;
   description?: string; 
+
 }
 
 export interface TimeSlot {
