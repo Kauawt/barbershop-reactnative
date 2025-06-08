@@ -64,4 +64,5 @@ const Footer = () => {
     </View>
   );
 };
+}
 export default Footer;

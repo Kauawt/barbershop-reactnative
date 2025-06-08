@@ -1,12 +1,12 @@
- 
+
 // src/app/Register.tsx
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { getAuth, createUserWithEmailAndPassword, User } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndsenha, User } from 'firebase/auth';
 import app from '../services/firebase';
-import {  Alert, Image, Platform, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { Alert, Image, Platform, Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { Scissors } from 'lucide-react-native';
 import CustomInput from '../components/inputs/CustomInput';
 import CustomMaskInput from '../components/inputs/CustomMaskInput';
@@ -19,21 +19,23 @@ export default function Register() {
   const [name, setName] = useState('');
   const [firebaseUser, setFirebaseUser] = useState<User | null>(null);
   const [cpf, setCpf] = useState('');
-  const [birthdate, setBirthdate] = useState('');
+  const [dataNascimento, setdataNascimento] = useState('');
   const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
+  const [endereco, setEndereco] = useState('');
   const [number, setNumber] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [cep, setCep] = useState('');
   const [securityKey, setSecurityKey] = useState('');
-  const [password, setPassword] = useState('');
+  const [senha, setSenha] = useState('');
 
+  const router = useRouter();
   const auth = getAuth(app);
-  
+
   function convertToISODate(dateStr: string): string {
     const [day, month, year] = dateStr.split('/');
     return `${year}-${month}-${day}`;
   }
+
   const handleNext = () => {
     if (step === 1) {
       if (!name || !cpf || !dataNascimento || !email) {
@@ -75,24 +77,24 @@ export default function Register() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, senha);
+      const userCredential = await createUserWithEmailAndsenha(auth, email, senha);
       setFirebaseUser(userCredential.user);
 
       console.log("Usuário criado:", userCredential.user.uid);
 
       await APIService.cliente.create({
-          name,
-          email,
-          senha: password,
-          CPF: cpf,
-          dataNascimento: convertToISODate(birthdate),
-          chaveSeguraRecuperaSenha: securityKey,
-          endereco: `${address}, ${number}, ${neighborhood}, ${cep}`,
-          role: 'cliente',
-        });
+        name,
+        email,
+        senha: senha,
+        CPF: cpf,
+        dataNascimento: convertToISODate(dataNascimento),
+        chaveSeguraRecuperaSenha: securityKey,
+        endereco: `${endereco}, ${number}, ${neighborhood}, ${cep}`,
+        role: 'cliente',
+      });
 
-        Alert.alert("Cadastro concluído!", "Redirecionando para o login...");
-        router.replace("/login");
+      Alert.alert("Cadastro concluído!", "Redirecionando para o login...");
+      router.replace("/login");
       if (!response.ok) {
         throw new Error("Erro ao registrar no banco");
       }
@@ -119,7 +121,7 @@ export default function Register() {
         case "auth/invalid-email":
           Alert.alert("Erro", "E-mail inválido.");
           break;
-        case "auth/weak-password":
+        case "auth/weak-senha":
           Alert.alert("Erro", "A senha é muito fraca.");
           break;
         default:
@@ -147,17 +149,17 @@ export default function Register() {
               <>
                 <CustomInput placeholder="Nome" value={name} onChangeText={setName} />
                 <CustomMaskInput placeholder="CPF" value={cpf} onChangeText={setCpf} maskType="cpf" keyboardType="numeric" />
-                <CustomMaskInput placeholder="Data de Nascimento (DD/MM/AAAA)" value={birthdate} onChangeText={setBirthdate} maskType="date" keyboardType="numeric" />
+                <CustomMaskInput placeholder="Data de Nascimento (DD/MM/AAAA)" value={dataNascimento} onChangeText={setdataNascimento} maskType="date" keyboardType="numeric" />
                 <CustomInput placeholder="E-mail" value={email} onChangeText={setEmail} />
               </>
             ) : (
               <>
-                <CustomInput placeholder="Endereço (Rua)" value={address} onChangeText={setAddress} />
+                <CustomInput placeholder="Endereço (Rua)" value={endereco} onChangeText={setEndereco} />
                 <CustomInput placeholder="Número" value={number} onChangeText={setNumber} />
                 <CustomInput placeholder="Bairro" value={neighborhood} onChangeText={setNeighborhood} />
                 <CustomInput placeholder="CEP" value={cep} onChangeText={setCep} />
                 <CustomInput placeholder="Chave de Segurança" value={securityKey} onChangeText={setSecurityKey} />
-                <CustomInput placeholder="Senha" value={password} onChangeText={setPassword} secureTextEntry />
+                <CustomInput placeholder="Senha" value={senha} onChangeText={setSenha} secureTextEntry />
               </>
             )}
 

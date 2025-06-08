@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Text, TouchableOpacity, View, ScrollView } from 'react-native';
+import { Alert, Text, TouchableOpacity, View, ScrollView, Platform } from 'react-native';
 import { Scissors } from 'lucide-react-native';
 import CustomInput from '../components/inputs/CustomInput';
 import CustomMaskInput from '../components/inputs/CustomMaskInput';
@@ -23,6 +23,7 @@ export default function Login() {
   const [cep, setCep] = useState('');
   const [securityKey, setSecurityKey] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoginTab, setIsLoginTab] = useState(true);
 
   const router = useRouter();
   const auth = getAuth(app);
@@ -62,8 +63,6 @@ export default function Login() {
       setIsSubmitting(false);
     }
   };
-
-  const router = useRouter();
 
   function convertToISODate(dateStr: string): string {
   const [day, month, year] = dateStr.split('/');
@@ -172,3 +171,7 @@ export default function Login() {
     </View>
   );
 }
+function setIsSubmitting(arg0: boolean) {
+  throw new Error('Function not implemented.');
+}
+
