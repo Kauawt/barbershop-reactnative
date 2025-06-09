@@ -6,8 +6,6 @@ import { Scissors } from "lucide-react-native";
 const Footer = () => {
   const router = useRouter();
 
-
-const Footer = () => {
   return (
     <View className="bg-black py-8 px-4">
       <View className="max-w-6xl mx-auto">
@@ -64,5 +62,5 @@ const Footer = () => {
     </View>
   );
 };
-}
+
 export default Footer;
