@@ -31,7 +31,7 @@ const WebDatePicker = ({ value, onChange, minimumDate }) => {
   );
 };
 
-const Appointment = () => {
+export default function Agendamento() {
   const router = useRouter();
   const [selectedService, setSelectedService] = useState('');
   const [selectedBarber, setSelectedBarber] = useState('');
