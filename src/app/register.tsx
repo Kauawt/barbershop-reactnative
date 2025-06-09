@@ -132,16 +132,12 @@ export default function Register() {
   return (
     <View className="flex-1 bg-white">
       <Header />
-
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ alignItems: 'center', paddingVertical: 20, paddingHorizontal: 16 }}
-        showsVerticalScrollIndicator={false}
-      >
+       <ScrollView className="flex-1">
+      <View className="flex-1 items-center justify-center p-4">
         <View className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md">
           <View className="flex-row items-center mb-4">
-            <Scissors className="h-6 w-6 text-barber-gold" />
-            <Text className="text-xl font-bold ml-2">JP Barbearia</Text>
+            <Scissors className="h-6 w-6 text-yellow-400" />
+            <Text className="text-xl font-bold">Inova Barbearia</Text>
           </View>
 
           <View className="space-y-4">
@@ -184,10 +180,11 @@ export default function Register() {
             )}
           </View>
         </View>
-
+        </View>
         <View className="h-10" />
-        <Footer />
+        <Footer/>
       </ScrollView>
     </View>
+    
   );
 }

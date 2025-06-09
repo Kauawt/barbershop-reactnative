@@ -16,7 +16,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 }) => {
   return (
     <TextInput
-      className="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 mb-4 text-gray-800 w-full max-w-xs mx-auto"
+      className="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-gray-800 w-full max-w-xs mx-auto"
       placeholder={placeholder}
       placeholderTextColor="#9CA3AF"
       value={value}
