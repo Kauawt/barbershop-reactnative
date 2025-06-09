@@ -2,23 +2,12 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.4:5000/api',
+  baseURL: 'http://localhost:5000/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
-
-const handleLogin = async () => {
-  try {
-    const data = await login(email, password);
-    await AsyncStorage.setItem('token', data.token); 
-    console.log('Login realizado');
-  } catch (error) {
-    console.error('Erro ao fazer login', error);
-  }
-};
-
 
 // Serviço de Agendamento
 const AgendamentoService = {
@@ -95,10 +84,10 @@ const ClienteService = {
   },
 
   create: async (clienteData: {
+    firebase_uid: string;
     name: string;
     email: string;
     senha: string;
-    chaveSeguraRecuperaSenha: string;
     CPF: string;
     dataNascimento: string;
     endereco: string;
