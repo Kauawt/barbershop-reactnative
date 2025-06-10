@@ -16,6 +16,7 @@ export default function Login() {
 
   const router = useRouter();
   const auth = getAuth(app);
+  const user = auth.currentUser;
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -28,6 +29,11 @@ export default function Login() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       console.log("Usuário logado:", userCredential.user);
+
+      if (user) {
+        const token = await user.getIdToken();
+        console.log("ID Token:", token);
+      }
 
       if (Platform.OS !== 'web') {
         await SecureStore.setItemAsync('token', userCredential.user.uid);
