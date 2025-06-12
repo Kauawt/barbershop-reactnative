@@ -28,15 +28,17 @@ export default function Login() {
 
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const loggedUser = userCredential.user;
+      const token = await loggedUser.getIdToken();
+
       console.log("Usuário logado:", userCredential.user);
 
-      if (user) {
-        const token = await user.getIdToken();
-        console.log("ID Token:", token);
-      }
-
-      if (Platform.OS !== 'web') {
-        await SecureStore.setItemAsync('token', userCredential.user.uid);
+      if (Platform.OS === 'web') {
+        localStorage.setItem('token', token);
+        localStorage.setItem('uid', loggedUser.uid);
+      } else {
+        await SecureStore.setItemAsync('token', token);
+        await SecureStore.setItemAsync('uid', loggedUser.uid);
       }
 
       router.replace("/");

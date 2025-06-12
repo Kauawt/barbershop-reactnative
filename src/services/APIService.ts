@@ -1,5 +1,6 @@
 // src/services/APIService.ts
 import axios from 'axios';
+import { getAuth } from 'firebase/auth';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
@@ -8,6 +9,29 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Função para pegar o token atual do usuário logado via Firebase
+async function getFirebaseToken() {
+  const auth = getAuth();
+  const user = auth.currentUser;
+  if (user) {
+    return await user.getIdToken(/* forceRefresh= */ false);
+  }
+  return null;
+}
+
+// Interceptor para adicionar o token no header Authorization
+api.interceptors.request.use(
+  async (config) => {
+    const token = await getFirebaseToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 
 // Serviço de Agendamento
 const AgendamentoService = {
@@ -69,6 +93,19 @@ const AgendamentoService = {
       throw error;
     }
   },
+};
+
+// Barbeiros (usuários do tipo barbeiro)
+const BarbeiroService = {
+  getAll: async () => {
+    try {
+      const response = await api.get('/usuarios?tipo=barbeiro');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar barbeiros:', error);
+      throw error;
+    }
+  }
 };
 
 // Serviço de Cliente
@@ -306,4 +343,5 @@ export default {
   servico: ServicoService,
   solicitarServico: SolicitarServicoService,
   usuario: UsuarioService,
+  barbeiro: BarbeiroService,
 };

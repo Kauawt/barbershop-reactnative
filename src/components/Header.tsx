@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, useWindowDimensions } from "react-native"
 import { useRouter } from 'expo-router';
 import { Scissors, Menu, X, User } from "lucide-react-native";
 import { getAuth } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import firebaseApp from '../services/firebase';
 
 const Header = () => {
@@ -15,6 +16,15 @@ const Header = () => {
   const userName = currentUser?.displayName || currentUser?.email || "Perfil";
 
   const isLargeScreen = width >= 768;
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.replace('/login');
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error);
+    }
+  };
 
   return (
     <View className="bg-black py-4 px-4 w-full z-50">
@@ -38,6 +48,12 @@ const Header = () => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.replace('/agendamento')}>
               <Text className="text-white">Agendar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className="ml-4"
+              onPress={handleLogout}
+            >
+              <Text className="text-white">Sair</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -69,6 +85,9 @@ const Header = () => {
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { router.replace('/agendamento'); setIsMenuOpen(false); }} className="py-2">
             <Text className="text-white">Agendar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => { handleLogout(); setIsMenuOpen(false); }} className="py-2">
+            <Text className="text-red-400">Sair</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => { router.replace('/profile'); setIsMenuOpen(false); }} className="py-2">
             <Text className="text-barber-gold">Perfil</Text>
