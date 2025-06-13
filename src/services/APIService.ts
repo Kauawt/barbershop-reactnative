@@ -32,7 +32,6 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-
 // Serviço de Agendamento
 const AgendamentoService = {
   getAll: async () => {
@@ -59,6 +58,10 @@ const AgendamentoService = {
     cliente: string;
     usuario: string;
     dataAgendamento: Date;
+    servicos: Array<{
+      servico: string;
+      quantidade: number;
+    }>;
     total: number;
   }) => {
     try {
@@ -74,6 +77,12 @@ const AgendamentoService = {
     dataAgendamento?: Date;
     cliente?: string;
     usuario?: string;
+    servicos?: Array<{
+      servico: string;
+      quantidade: number;
+    }>;
+    total?: number;
+    status?: string;
   }) => {
     try {
       const response = await api.put(`/agendamentos/${id}`, updateData);
@@ -120,6 +129,16 @@ const ClienteService = {
     }
   },
 
+  getByFirebaseUid: async (firebase_uid: string) => {
+    try {
+      const response = await api.get(`/clientes/firebase/${firebase_uid}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar cliente por firebase_uid:', error);
+      throw error;
+    }
+  },
+
   create: async (clienteData: {
     firebase_uid: string;
     name: string;
@@ -145,6 +164,14 @@ const ClienteService = {
     senha?: string;
     chaveSeguraRecuperaSenha?: string;
     role?: string;
+    phone?: string;
+    address?: {
+      street: string;
+      number: string;
+      city: string;
+      state: string;
+      zipCode: string;
+    };
   }) => {
     try {
       const response = await api.put(`/clientes/${id}`, updateData);
@@ -219,69 +246,6 @@ const ServicoService = {
   },
 };
 
-// Serviço de SolicitarServico
-const SolicitarServicoService = {
-  getAll: async () => {
-    try {
-      const response = await api.get('/solicitarservicos');
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar solicitações:', error);
-      throw error;
-    }
-  },
-
-  getById: async (id: string) => {
-    try {
-      const response = await api.get(`/solicitarservicos/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar solicitação:', error);
-      throw error;
-    }
-  },
-
-  create: async (solicitacaoData: {
-    servico: string;
-    quantidade: number;
-    preco: number;
-    total: number;
-    agendamento: string;
-  }) => {
-    try {
-      const response = await api.post('/solicitarservicos', solicitacaoData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao criar solicitação:', error);
-      throw error;
-    }
-  },
-
-  update: async (id: string, updateData: {
-    servico?: string;
-    quantidade?: number;
-    agendamento?: string;
-  }) => {
-    try {
-      const response = await api.put(`/solicitarservicos/${id}`, updateData);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao atualizar solicitação:', error);
-      throw error;
-    }
-  },
-
-  delete: async (id: string) => {
-    try {
-      const response = await api.delete(`/solicitarservicos/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao deletar solicitação:', error);
-      throw error;
-    }
-  },
-};
-
 // Serviço de Usuário
 const UsuarioService = {
   getAll: async () => {
@@ -294,12 +258,34 @@ const UsuarioService = {
     }
   },
 
+  getBarbeiros: async () => {
+    try {
+      const response = await api.get('/usuarios/barbeiros');
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar barbeiros:', error);
+      throw error;
+    }
+  },
+
+  getByFirebaseUid: async (firebase_uid: string) => {
+    try {
+      const response = await api.get(`/usuarios/firebase/${firebase_uid}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar usuário por firebase_uid:', error);
+      throw error;
+    }
+  },
+
   create: async (usuarioData: {
     name: string;
     email: string;
     senha: string;
     telefone: string;
     role: string;
+    firebase_uid: string;
+    salario?: number;
   }) => {
     try {
       const response = await api.post('/usuarios', usuarioData);
@@ -337,11 +323,11 @@ const UsuarioService = {
   },
 };
 
+// Exporta os serviços
 export default {
   agendamento: AgendamentoService,
   cliente: ClienteService,
   servico: ServicoService,
-  solicitarServico: SolicitarServicoService,
   usuario: UsuarioService,
   barbeiro: BarbeiroService,
 };
