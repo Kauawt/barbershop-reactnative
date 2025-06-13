@@ -1,12 +1,37 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, Platform } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, Platform, ActivityIndicator } from "react-native";
 import { useRouter } from 'expo-router';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import APIService from "../services/APIService";
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as SecureStore from 'expo-secure-store';
+import { Scissors, Calendar } from 'lucide-react-native';
+import { getAuth } from "firebase/auth";
+import app from "../services/firebase";
 
-const WebDatePicker = ({ value, onChange, minimumDate }) => {
+interface Service {
+  id: string;
+  name: string;
+  price: number;
+  duration: number;
+  image: string;
+  description: string;
+}
+
+interface Barber {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface WebDatePickerProps {
+  value: Date;
+  onChange: (event: { type: string }, date: Date) => void;
+  minimumDate: Date;
+}
+
+const WebDatePicker: React.FC<WebDatePickerProps> = ({ value, onChange, minimumDate }) => {
   return (
     <input
       type="date"
@@ -33,336 +58,345 @@ const WebDatePicker = ({ value, onChange, minimumDate }) => {
 
 export default function Agendamento() {
   const router = useRouter();
-  const [selectedService, setSelectedService] = useState('');
-  const [selectedBarber, setSelectedBarber] = useState('');
-  const [date, setDate] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [time, setTime] = useState('');
+  const auth = getAuth(app);
+  const [loading, setLoading] = useState(true);
+  const [services, setServices] = useState<Service[]>([]);
+  const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
-  const [redirectCountdown, setRedirectCountdown] = useState(null);
-  const [services, setServices] = useState([]);
-  const [barbers, setBarbers] = useState([]);
+  const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
 
-
-  const getToken = async () => {
-    const token = await SecureStore.getItemAsync('token');
-    console.log("Token recuperado:", token);
-    return token;
-  };
-
-  const getSelectedServiceDetails = () => {
-    return services.find(service => service.id === selectedService);
-  };
-
-  const getSelectedBarberDetails = () => {
-    return barbers.find(barber => barber.id === selectedBarber);
-  };
-
-  const formatDate = (date) => {
-    return date.toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    });
-  };
+  const stepTitles = [
+    "Selecione um Serviço",
+    "Escolha o Barbeiro",
+    "Selecione uma Data",
+    "Confirme o Agendamento"
+  ];
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const servicesData = await APIService.servico.getAll();
-        const barbersData = await APIService.usuario.getAll();
-        console.log('servicesData:', servicesData);
-        console.log('barbersData:', barbersData);
-        setServices(Array.isArray(servicesData) ? servicesData : []);
-        setBarbers(Array.isArray(barbersData) ? barbersData : []);
-      } catch (error) {
-        Alert.alert('Erro', 'Erro ao carregar serviços ou barbeiros.');
-      }
-    };
-
     fetchData();
   }, []);
 
-  const handleConfirm = async () => {
+  const fetchData = async () => {
     try {
-      const service = getSelectedServiceDetails();
-      const barber = getSelectedBarberDetails();
+      const [servicesData, barbersData] = await Promise.all([
+        APIService.servico.getAll(),
+        APIService.usuario.getBarbeiros()
+      ]);
 
-      const agendamentoPayload = {
-        cliente: userId,
-        usuario: selectedBarber,
-        dataAgendamento: new Date(`${date.toISOString().split('T')[0]}T${time}:00`),
-        total: getSelectedServiceDetails()?.price || 0,
-      };
-    };
+      console.log('Dados dos serviços:', servicesData);
+      console.log('Dados dos barbeiros:', barbersData);
 
-    await APIService.agendamento.create(agendamentoPayload);
+      const adaptedServices = servicesData.data
+        .filter((srv: any) => srv.isActive)
+        .map((srv: any) => ({
+          id: srv._id,
+          name: srv.name,
+          price: srv.price,
+          duration: srv.duracao,
+          image: srv.image,
+          description: srv.description || "Descrição não disponível"
+        }));
 
-    const confirmationMessage = `Serviço: Corte\nBarbeiro: João\nData: ${formatDate(date)}\nHorário: ${time}\nValor: R$ 50,00`;
+      console.log('Serviços adaptados:', adaptedServices);
+      setServices(adaptedServices);
+      setBarbers(barbersData.data || []);
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+      Alert.alert("Erro", "Não foi possível carregar os dados. Tente novamente.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    if (Platform.OS === 'web') {
-      alert(`Agendamento confirmado!\n\n${confirmationMessage}\n\nVocê será redirecionado em 3 segundos...`);
-    } else {
-      Alert.alert("Agendamento confirmado!", `${confirmationMessage}\n\nVocê será redirecionado em 3 segundos...`);
+  const handleServiceSelect = (service: Service) => {
+    console.log('Serviço selecionado:', service);
+    setSelectedService(service);
+    setStep(2);
+  };
+
+  const handleBarberSelect = (barber: Barber) => {
+    console.log('Barbeiro selecionado:', barber);
+    setSelectedBarber(barber);
+    setStep(3);
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    setStep(4);
+  };
+
+  const handleBack = () => {
+    if (step > 1) setStep(step - 1);
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedService || !selectedBarber || !selectedDate) {
+      Alert.alert("Erro", "Por favor, selecione todos os campos necessários");
+      return;
     }
 
-    setRedirectCountdown(3);
-  } catch (error) {
-    Alert.alert("Erro", "Não foi possível confirmar o agendamento.");
+    setIsSubmitting(true);
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
+
+      const agendamentoData = {
+        cliente: user.uid,
+        usuario: selectedBarber._id,
+        dataAgendamento: selectedDate,
+        servicos: [{
+          servico: selectedService.id,
+          quantidade: 1
+        }],
+        total: selectedService.price
+      };
+
+      await APIService.agendamento.create(agendamentoData);
+      
+      const confirmationMessage = `Serviço: ${selectedService.name}\nBarbeiro: ${selectedBarber.name}\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nValor: R$ ${selectedService.price.toFixed(2)}`;
+
+      if (Platform.OS === 'web') {
+        alert(`Agendamento confirmado!\n\n${confirmationMessage}\n\nVocê será redirecionado em 3 segundos...`);
+      } else {
+        Alert.alert("Agendamento confirmado!", `${confirmationMessage}\n\nVocê será redirecionado em 3 segundos...`);
+      }
+
+      setRedirectCountdown(3);
+      setTimeout(() => {
+        router.replace("/");
+      }, 3000);
+    } catch (error) {
+      console.error("Erro ao criar agendamento:", error);
+      Alert.alert("Erro", "Não foi possível criar o agendamento. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#b58900" />
+      </View>
+    );
   }
-};
 
-const handleContinue = () => {
-  if (step < 4) setStep(step + 1);
-  else handleConfirm();
-};
+  return (
+    <View className="flex-1 bg-white relative">
+      <Header />
+      <ScrollView
+        className="flex-1 p-4 md:p-6"
+        contentContainerStyle={{
+          paddingBottom: 100,
+          maxWidth: 800,
+          marginHorizontal: 'auto',
+          width: '100%'
+        }}
+      >
+        {redirectCountdown !== null && (
+          <View className="bg-green-100 p-2 mb-4 rounded mx-auto max-w-md">
+            <Text className="text-green-800 text-center">
+              Redirecionando para a página inicial em {redirectCountdown} segundos...
+            </Text>
+          </View>
+        )}
 
-const handleBack = () => {
-  if (step > 1) setStep(step - 1);
-};
+        <View className="flex flex-row justify-around mb-6 mx-auto max-w-2xl w-full">
+          {stepTitles.map((title, index) => {
+            const isCurrent = step === index + 1;
+            const isCompleted = step > index + 1;
 
-const stepTitles = [
-  "Selecione um Serviço",
-  "Escolha o Barbeiro",
-  "Selecione uma Data",
-  "Escolha o Horário",
-];
-
-const onChangeDate = (event, selectedDate) => {
-  if (Platform.OS !== 'web') setShowDatePicker(false);
-  if (selectedDate) {
-    setDate(selectedDate);
-    if (Platform.OS === 'web') setTimeout(() => handleContinue(), 300);
-  }
-};
-
-return (
-  <View className="flex-1 bg-white relative">
-    <Header />
-
-    <ScrollView
-      className="flex-1 p-4 md:p-6"
-      contentContainerStyle={{
-        paddingBottom: 100,
-        maxWidth: 800,
-        marginHorizontal: 'auto',
-        width: '100%'
-      }}
-    >
-      {redirectCountdown !== null && (
-        <View className="bg-green-100 p-2 mb-4 rounded mx-auto max-w-md">
-          <Text className="text-green-800 text-center">
-            Redirecionando para a página inicial em {redirectCountdown} segundos...
-          </Text>
-        </View>
-      )}
-
-      <View className="flex flex-row justify-around mb-6 mx-auto max-w-2xl w-full">
-        {stepTitles.map((title, index) => {
-          const isCurrent = step === index + 1;
-          const isCompleted = step > index + 1;
-
-          return (
-            <View key={index} className="flex items-center mx-1" style={{ minWidth: 70 }}>
-              <View className={`h-10 w-10 rounded-full flex items-center justify-center ${isCurrent ? 'bg-black' :
-                isCompleted ? 'bg-yellow-500 border-yellow-500' :
+            return (
+              <View key={index} className="flex items-center mx-1" style={{ minWidth: 70 }}>
+                <View className={`h-10 w-10 rounded-full flex items-center justify-center ${
+                  isCurrent ? 'bg-black' :
+                  isCompleted ? 'bg-yellow-500 border-yellow-500' :
                   'border-2 border-gray-300'
                 }`}>
-                <Text className={`text-lg font-bold ${isCurrent ? 'text-white' :
-                  isCompleted ? 'text-white' :
+                  <Text className={`text-lg font-bold ${
+                    isCurrent ? 'text-white' :
+                    isCompleted ? 'text-white' :
                     'text-gray-400'
                   }`}>
-                  {index + 1}
+                    {index + 1}
+                  </Text>
+                </View>
+                <Text className={`text-xs md:text-sm text-center mt-2 ${
+                  isCurrent ? 'text-black font-bold' : 'text-gray-500'
+                }`}>
+                  {title}
                 </Text>
               </View>
-              <Text className={`text-xs md:text-sm text-center mt-2 ${isCurrent ? 'text-black font-bold' : 'text-gray-500'
-                }`}>
-                {title}
+            );
+          })}
+        </View>
+
+        <View className="bg-white rounded-lg shadow-sm p-6 mx-auto w-full max-w-2xl mb-8">
+          <Text className="text-2xl font-bold text-gray-800 text-center mb-6">
+            {stepTitles[step - 1]}
+          </Text>
+
+          {step === 1 && (
+            <>
+              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                Selecione um Serviço:
               </Text>
-            </View>
-          );
-        })}
-      </View>
+              <View className="flex flex-row flex-wrap justify-center gap-3 mb-6">
+                {services.map(service => {
+                  const isSelected = selectedService?.id === service.id;
+                  return (
+                    <TouchableOpacity
+                      key={service.id}
+                      className={`rounded-lg p-4 w-28 items-center ${
+                        isSelected ?
+                        'bg-yellow-500 shadow-md' :
+                        'bg-gray-100 hover:bg-gray-200'
+                      } transition-colors`}
+                      onPress={() => handleServiceSelect(service)}
+                    >
+                      <Text className={`text-center font-medium ${
+                        isSelected ? 'text-white' : 'text-gray-700'
+                      }`}>
+                        {service.name}
+                      </Text>
+                      <Text className={`text-center text-sm mt-1 ${
+                        isSelected ? 'text-white' : 'text-gray-500'
+                      }`}>
+                        R$ {service.price.toFixed(2)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
+          )}
 
-      <View className="bg-white rounded-lg shadow-sm p-6 mx-auto w-full max-w-2xl mb-8">
-        <Text className="text-2xl font-bold text-gray-800 text-center mb-6">
-          {stepTitles[step - 1]}
-        </Text>
+          {step === 2 && (
+            <>
+              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                Escolha o Barbeiro:
+              </Text>
+              <View className="flex flex-row flex-wrap justify-center gap-3 mb-6">
+                {barbers.map(barber => {
+                  const isSelected = selectedBarber?._id === barber._id;
+                  return (
+                    <TouchableOpacity
+                      key={barber._id}
+                      className={`rounded-lg p-4 w-28 items-center ${
+                        isSelected ?
+                        'bg-yellow-500 shadow-md' :
+                        'bg-gray-100 hover:bg-gray-200'
+                      } transition-colors`}
+                      onPress={() => handleBarberSelect(barber)}
+                    >
+                      <Text className={`text-center font-medium ${
+                        isSelected ? 'text-white' : 'text-gray-700'
+                      }`}>
+                        {barber.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </>
+          )}
 
-        {step === 1 && (
-          <>
-            <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-              Selecione um Serviço:
-            </Text>
-            <View className="flex flex-row flex-wrap justify-center gap-3 mb-6">
-              {services.map(service => (
-                <TouchableOpacity
-                  key={service.id}
-                  className={`rounded-lg p-4 w-28 items-center ${selectedService === service.id ?
-                    'bg-yellow-500 shadow-md' :
-                    'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors`}
-                  onPress={() => {
-                    setSelectedService(service.id);
-                    handleContinue();
-                  }}
-                >
-                  <Text className={`text-center font-medium ${selectedService === service.id ? 'text-white' : 'text-gray-700'
-                    }`}>
-                    {service.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
-
-        {step === 2 && (
-          <>
-            <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-              Escolha o Barbeiro:
-            </Text>
-            <View className="flex flex-row flex-wrap justify-center gap-3 mb-6">
-              {barbers.map(barber => (
-                <TouchableOpacity
-                  key={barber.id}
-                  className={`rounded-lg p-4 w-28 items-center ${selectedBarber === barber.id ?
-                    'bg-yellow-500 shadow-md' :
-                    'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors`}
-                  onPress={() => {
-                    setSelectedBarber(barber.id);
-                    handleContinue();
-                  }}
-                >
-                  <Text className={`text-center font-medium ${selectedBarber === barber.id ? 'text-white' : 'text-gray-700'
-                    }`}>
-                    {barber.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-              Selecione uma Data:
-            </Text>
-            {Platform.OS === 'web' ? (
-              <WebDatePicker
-                value={date}
-                onChange={onChangeDate}
-                minimumDate={new Date()}
-              />
-            ) : (
-              <>
+          {step === 3 && (
+            <>
+              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                Selecione uma Data:
+              </Text>
+              {Platform.OS === 'web' ? (
+                <WebDatePicker
+                  value={selectedDate || new Date()}
+                  onChange={(_, date) => handleDateSelect(date)}
+                  minimumDate={new Date()}
+                />
+              ) : (
                 <TouchableOpacity
                   className="bg-gray-100 rounded-lg p-3 mb-6 mx-auto max-w-xs"
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => {
+                    // Implementar seleção de data para mobile
+                    Alert.alert("Em desenvolvimento", "Seleção de data em desenvolvimento");
+                  }}
                 >
                   <Text className="text-gray-700 text-center">
-                    {formatDate(date)}
+                    {selectedDate ? selectedDate.toLocaleDateString('pt-BR') : "Selecione uma data"}
                   </Text>
                 </TouchableOpacity>
-                {showDatePicker && (
-                  <DateTimePicker
-                    value={date}
-                    mode="date"
-                    display="default"
-                    onChange={onChangeDate}
-                    minimumDate={new Date()}
-                  />
-                )}
-              </>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
 
-        {step === 4 && (
-          <>
-            <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-              Escolha o Horário:
-            </Text>
-            <View className="flex flex-row flex-wrap justify-center gap-3 mb-6">
-              {['14:00', '15:00', '15:30'].map(hour => (
-                <TouchableOpacity
-                  key={hour}
-                  className={`rounded-lg p-3 w-24 items-center ${time === hour ?
-                    'bg-yellow-500 shadow-md' :
-                    'bg-gray-100 hover:bg-gray-200'
-                    } transition-colors`}
-                  onPress={() => setTime(hour)}
-                >
-                  <Text className={`font-medium ${time === hour ? 'text-white' : 'text-gray-700'
-                    }`}>
-                    {hour}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {time && (
+          {step === 4 && (
+            <>
+              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                Confirme o Agendamento
+              </Text>
               <View className="mt-6 p-4 bg-gray-50 rounded-md">
                 <Text className="font-medium text-lg mb-3 text-center">Resumo do Agendamento</Text>
                 <View className="space-y-2 text-sm">
                   <View className="flex flex-row justify-between">
                     <Text className="text-gray-600">Serviço:</Text>
-                    <Text className="font-medium">{getSelectedServiceDetails()?.name}</Text>
+                    <Text className="font-medium">{selectedService?.name}</Text>
                   </View>
                   <View className="flex flex-row justify-between">
                     <Text className="text-gray-600">Barbeiro:</Text>
-                    <Text className="font-medium">{getSelectedBarberDetails()?.name}</Text>
+                    <Text className="font-medium">{selectedBarber?.name}</Text>
                   </View>
                   <View className="flex flex-row justify-between">
                     <Text className="text-gray-600">Data:</Text>
-                    <Text className="font-medium">{formatDate(date)}</Text>
-                  </View>
-                  <View className="flex flex-row justify-between">
-                    <Text className="text-gray-600">Horário:</Text>
-                    <Text className="font-medium">{time}</Text>
+                    <Text className="font-medium">{selectedDate?.toLocaleDateString('pt-BR')}</Text>
                   </View>
                   <View className="flex flex-row justify-between pt-2 border-t border-gray-200">
                     <Text className="text-gray-600">Valor:</Text>
                     <Text className="font-bold text-yellow-500">
-                      R$ {getSelectedServiceDetails()?.price?.toFixed(2)}
+                      R$ {selectedService?.price.toFixed(2)}
                     </Text>
                   </View>
                 </View>
               </View>
-            )}
-          </>
-        )}
+            </>
+          )}
 
-        <View className="flex-row justify-between mt-8">
-          <TouchableOpacity
-            onPress={handleBack}
-            className={`border border-gray-300 rounded-lg px-4 py-2 ${step === 1 ? 'opacity-50' : 'hover:bg-gray-50'}`}
-            disabled={step === 1}
-          >
-            <Text className="text-gray-700">Voltar</Text>
-          </TouchableOpacity>
+          <View className="flex-row justify-between mt-8">
+            <TouchableOpacity
+              onPress={handleBack}
+              className={`border border-gray-300 rounded-lg px-4 py-2 ${step === 1 ? 'opacity-50' : 'hover:bg-gray-50'}`}
+              disabled={step === 1}
+            >
+              <Text className="text-gray-700">Voltar</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={step === 4 ? handleConfirm : handleContinue}
-            className="bg-yellow-500 rounded-lg px-6 py-2 ml-auto hover:bg-yellow-600 transition-colors"
-            disabled={
-              (step === 1 && !selectedService) ||
-              (step === 2 && !selectedBarber) ||
-              (step === 3 && !date) ||
-              (step === 4 && !time)
-            }
-          >
-            <Text className="text-white font-medium">
-              {step === 4 ? "Confirmar Agendamento" : "Continuar"}
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={step === 4 ? handleSubmit : () => setStep(step + 1)}
+              className="bg-yellow-500 rounded-lg px-6 py-2 ml-auto hover:bg-yellow-600 transition-colors"
+              disabled={
+                (step === 1 && !selectedService) ||
+                (step === 2 && !selectedBarber) ||
+                (step === 3 && !selectedDate) ||
+                (step === 4 && isSubmitting)
+              }
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <Text className="text-white font-medium">
+                  {step === 4 ? "Confirmar Agendamento" : "Continuar"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
       <Footer />
-    </ScrollView>
-
-  </View>
-);
-};
+    </View>
+  );
+}

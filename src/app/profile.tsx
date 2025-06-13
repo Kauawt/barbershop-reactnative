@@ -1,38 +1,71 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { User as UserIcon, Loader2 } from "lucide-react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-//import { useAuth } from "../context/AuthContext";
+import { getAuth } from 'firebase/auth';
+import app from '../services/firebase';
+import APIService from "../services/APIService";
 
 export default function Profile() {
   const router = useRouter();
-  //const { user, updateUser } = useAuth();
+  const auth = getAuth(app);
+  const [user, setUser] = useState(auth.currentUser);
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState<any>(null);
 
   const [tab, setTab] = useState<"personal" | "address">("personal");
 
- /* const [personalInfo, setPersonalInfo] = useState({
-    name: user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
+  const [personalInfo, setPersonalInfo] = useState({
+    name: "",
+    email: "",
+    phone: "",
   });
 
   const [address, setAddress] = useState({
-    street: user?.address?.street || "",
-    number: user?.address?.number || "",
-    city: user?.address?.city || "",
-    state: user?.address?.state || "",
-    zipCode: user?.address?.zipCode || "",
+    street: "",
+    number: "",
+    city: "",
+    state: "",
+    zipCode: "",
   });
 
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    if (!user) {
-      router.replace("/login");
-    }
-  }, [user]);
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      setUser(user);
+      if (user) {
+        try {
+          const response = await APIService.cliente.getByFirebaseUid(user.uid);
+          if (response) {
+            setUserData(response);
+            setPersonalInfo({
+              name: response.name || "",
+              email: response.email || "",
+              phone: response.phone || "",
+            });
+            setAddress({
+              street: response.address?.street || "",
+              number: response.address?.number || "",
+              city: response.address?.city || "",
+              state: response.address?.state || "",
+              zipCode: response.address?.zipCode || "",
+            });
+          }
+        } catch (error) {
+          console.error("Erro ao buscar dados do usuário:", error);
+          Alert.alert("Erro", "Não foi possível carregar os dados do usuário.");
+        }
+      } else {
+        router.replace("/login");
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleChangePersonal = (field: keyof typeof personalInfo, value: string) => {
     setPersonalInfo((prev) => ({ ...prev, [field]: value }));
@@ -42,23 +75,49 @@ export default function Profile() {
     setAddress((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSavePersonal = () => {
+  const handleSavePersonal = async () => {
     setIsSaving(true);
-    // Simula salvar via API e atualizar contexto
-    setTimeout(() => {
-      updateUser({ ...user, ...personalInfo });
+    try {
+      if (userData) {
+        await APIService.cliente.update(userData._id, {
+          name: personalInfo.name,
+          email: personalInfo.email,
+          phone: personalInfo.phone,
+        });
+        Alert.alert("Sucesso", "Informações atualizadas com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar dados:", error);
+      Alert.alert("Erro", "Não foi possível atualizar as informações.");
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   };
 
-  const handleSaveAddress = () => {
+  const handleSaveAddress = async () => {
     setIsSaving(true);
-    // Simula salvar via API e atualizar contexto
-    setTimeout(() => {
-      updateUser({ ...user, address });
+    try {
+      if (userData) {
+        await APIService.cliente.update(userData._id, {
+          address: address,
+        });
+        Alert.alert("Sucesso", "Endereço atualizado com sucesso!");
+      }
+    } catch (error) {
+      console.error("Erro ao atualizar endereço:", error);
+      Alert.alert("Erro", "Não foi possível atualizar o endereço.");
+    } finally {
       setIsSaving(false);
-    }, 1000);
-  };*/
+    }
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#b58900" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-white">
@@ -68,8 +127,8 @@ export default function Profile() {
           <View className="w-24 h-24 rounded-full bg-barber-gold/20 flex items-center justify-center mb-4">
             <UserIcon size={48} color="#b58900" />
           </View>
-          <Text className="text-2xl font-semibold text-barber-gold">{user?.name || ""}</Text>
-          <Text className="text-gray-300">{user?.email || ""}</Text>
+          <Text className="text-2xl font-semibold text-barber-gold">{userData?.name || ""}</Text>
+          <Text className="text-gray-300">{userData?.email || ""}</Text>
         </View>
 
         {/* Tabs */}

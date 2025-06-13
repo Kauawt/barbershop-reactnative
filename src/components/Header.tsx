@@ -1,25 +1,72 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, useWindowDimensions } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, useWindowDimensions, Platform } from "react-native";
 import { useRouter } from 'expo-router';
-import { Scissors, Menu, X, User } from "lucide-react-native";
+import { Scissors, Menu, X, User, LogOut } from "lucide-react-native";
 import { getAuth } from "firebase/auth";
 import { signOut } from "firebase/auth";
 import firebaseApp from '../services/firebase';
+import APIService from "../services/APIService";
+import * as SecureStore from "expo-secure-store";
 
 const Header = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { width } = useWindowDimensions();
-
   const auth = getAuth(firebaseApp);
+  const [userRole, setUserRole] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
   const currentUser = auth.currentUser;
   const userName = currentUser?.displayName || currentUser?.email || "Perfil";
 
   const isLargeScreen = width >= 768;
 
+  useEffect(() => {
+    const checkUserRole = async () => {
+      try {
+        let uid = "";
+        if (Platform.OS === "web") {
+          uid = localStorage.getItem("uid") || "";
+        } else {
+          uid = await SecureStore.getItemAsync("uid") || "";
+        }
+
+        if (uid) {
+          try {
+            const userResponse = await APIService.usuario.getByFirebaseUid(uid);
+            setUserRole(userResponse.role);
+          } catch (userError) {
+            try {
+              // Se não encontrar como usuário, tenta buscar como cliente
+              const clienteResponse = await APIService.cliente.getByFirebaseUid(uid);
+              setUserRole(clienteResponse.role);
+            } catch (clienteError) {
+              console.error("Erro ao verificar role:", clienteError);
+              setUserRole("");
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erro ao verificar role:", error);
+        setUserRole("");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUserRole();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      if (Platform.OS === "web") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("uid");
+      } else {
+        await SecureStore.deleteItemAsync("token");
+        await SecureStore.deleteItemAsync("uid");
+      }
       router.replace('/login');
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
