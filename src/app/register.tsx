@@ -61,20 +61,16 @@ export default function Register() {
 
       console.log("Usuário criado:", userCredential.user.uid);
 
-      await APIService.cliente.create({
-        firebase_uid: userCredential.user.uid,
+      await APIService.usuario.create({
         name,
         email,
         senha,
+        role: 'cliente',
+        firebase_uid: userCredential.user.uid,
         CPF: cpf,
         dataNascimento: convertToISODate(dataNascimento),
-        endereco: `${endereco}, ${number}, ${neighborhood}, ${cep}`,
-        role: 'cliente',
+        endereco: `${endereco}, ${number}, ${neighborhood}, ${cep}`
       });
-
-      if (Platform.OS !== 'web') {
-        await SecureStore.setItemAsync("token", userCredential.user.uid);
-      }
 
       Alert.alert("Cadastro concluído!", "Redirecionando para o login...");
       router.replace("/login");

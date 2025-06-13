@@ -7,6 +7,7 @@ import LoginHeader from "../components/LoginHeader";
 import Footer from "../components/Footer";
 import { Eye, EyeOff } from "lucide-react-native";
 import * as SecureStore from "expo-secure-store";
+import APIService from "../services/APIService";
 
 export default function Login() {
   const router = useRouter();
@@ -29,18 +30,26 @@ export default function Login() {
       const user = userCredential.user;
 
       if (user) {
+        try {
+          // Obter o token do Firebase
+          const token = await user.getIdToken(true);
+          
+          // Buscar o usuário no MongoDB para obter os dados
+          const userResponse = await APIService.usuario.getByFirebaseUid(user.uid);
+          
+          if (Platform.OS === "web") {
+            localStorage.setItem("token", token);
+            localStorage.setItem("uid", user.uid);
+          } else {
+            await SecureStore.setItemAsync("token", token);
+            await SecureStore.setItemAsync("uid", user.uid);
+          }
 
-        const token = await user.getIdToken();
-        
-        if (Platform.OS === "web") {
-          localStorage.setItem("token", token);
-          localStorage.setItem("uid", user.uid);
-        } else {
-          await SecureStore.setItemAsync("token", token);
-          await SecureStore.setItemAsync("uid", user.uid);
+          router.replace("/");
+        } catch (error) {
+          console.error("Erro ao obter token:", error);
+          Alert.alert("Erro", "Não foi possível fazer login. Tente novamente.");
         }
-
-        router.replace("/");
       }
     } catch (error: any) {
       console.error("Erro no login:", error);

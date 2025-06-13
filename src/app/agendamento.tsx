@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, Platform, ActivityIndicator } from "react-native";
+import { View, Text, TouchableOpacity, Alert, ScrollView, Platform, ActivityIndicator, TextInput } from "react-native";
 import { useRouter } from 'expo-router';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import APIService from "../services/APIService";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as SecureStore from 'expo-secure-store';
-import { Scissors, Calendar } from 'lucide-react-native';
+import { Scissors, Calendar, Search } from 'lucide-react-native';
 import { getAuth } from "firebase/auth";
 import app from "../services/firebase";
 
@@ -20,6 +20,12 @@ interface Service {
 }
 
 interface Barber {
+  _id: string;
+  name: string;
+  email: string;
+}
+
+interface Cliente {
   _id: string;
   name: string;
   email: string;
@@ -62,12 +68,16 @@ export default function Agendamento() {
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const [userRole, setUserRole] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const stepTitles = [
     "Selecione um Serviço",
@@ -82,13 +92,31 @@ export default function Agendamento() {
 
   const fetchData = async () => {
     try {
-      const [servicesData, barbersData] = await Promise.all([
-        APIService.servico.getAll(),
-        APIService.usuario.getBarbeiros()
-      ]);
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error("Usuário não autenticado");
+      }
 
-      console.log('Dados dos serviços:', servicesData);
-      console.log('Dados dos barbeiros:', barbersData);
+      // Buscar o usuário pelo Firebase UID
+      const userResponse = await APIService.usuario.getByFirebaseUid(user.uid);
+      if (userResponse.success && userResponse.data) {
+        setUserRole(userResponse.data.role);
+        
+        // Se for cliente, usar os dados do próprio usuário
+        if (userResponse.data.role === 'cliente') {
+          setSelectedCliente({
+            _id: userResponse.data._id,
+            name: userResponse.data.name,
+            email: userResponse.data.email
+          });
+        }
+      }
+
+      const [servicesData, barbersData, clientesData] = await Promise.all([
+        APIService.servico.getAll(),
+        APIService.usuario.getBarbeiros(),
+        APIService.usuario.getAll() // Buscar todos os usuários em vez de clientes
+      ]);
 
       const adaptedServices = servicesData.data
         .filter((srv: any) => srv.isActive)
@@ -101,9 +129,10 @@ export default function Agendamento() {
           description: srv.description || "Descrição não disponível"
         }));
 
-      console.log('Serviços adaptados:', adaptedServices);
       setServices(adaptedServices);
       setBarbers(barbersData.data || []);
+      // Filtrar apenas os usuários com role 'cliente'
+      setClientes(clientesData.data.filter((cliente: any) => cliente.role === 'cliente') || []);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
       Alert.alert("Erro", "Não foi possível carregar os dados. Tente novamente.");
@@ -113,15 +142,17 @@ export default function Agendamento() {
   };
 
   const handleServiceSelect = (service: Service) => {
-    console.log('Serviço selecionado:', service);
     setSelectedService(service);
     setStep(2);
   };
 
   const handleBarberSelect = (barber: Barber) => {
-    console.log('Barbeiro selecionado:', barber);
     setSelectedBarber(barber);
     setStep(3);
+  };
+
+  const handleClienteSelect = (cliente: Cliente) => {
+    setSelectedCliente(cliente);
   };
 
   const handleDateSelect = (date: Date) => {
@@ -134,7 +165,7 @@ export default function Agendamento() {
   };
 
   const handleSubmit = async () => {
-    if (!selectedService || !selectedBarber || !selectedDate) {
+    if (!selectedService || !selectedBarber || !selectedDate || !selectedCliente) {
       Alert.alert("Erro", "Por favor, selecione todos os campos necessários");
       return;
     }
@@ -142,25 +173,25 @@ export default function Agendamento() {
     setIsSubmitting(true);
 
     try {
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error("Usuário não autenticado");
-      }
-
+      // Garantindo que os dados estão no formato exato do Postman
       const agendamentoData = {
-        cliente: user.uid,
+        cliente: selectedCliente._id,
         usuario: selectedBarber._id,
-        dataAgendamento: selectedDate,
-        servicos: [{
-          servico: selectedService.id,
-          quantidade: 1
-        }],
-        total: selectedService.price
+        dataAgendamento: selectedDate.toISOString(),
+        servicos: [
+          {
+            servico: selectedService.id,
+            quantidade: 1
+          }
+        ]
       };
 
-      await APIService.agendamento.create(agendamentoData);
+      console.log("Dados do agendamento a serem enviados:", JSON.stringify(agendamentoData, null, 2));
+
+      const response = await APIService.agendamento.create(agendamentoData);
+      console.log("Resposta do servidor:", response);
       
-      const confirmationMessage = `Serviço: ${selectedService.name}\nBarbeiro: ${selectedBarber.name}\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nValor: R$ ${selectedService.price.toFixed(2)}`;
+      const confirmationMessage = `Cliente: ${selectedCliente.name}\nServiço: ${selectedService.name}\nBarbeiro: ${selectedBarber.name}\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nValor: R$ ${selectedService.price.toFixed(2)}`;
 
       if (Platform.OS === 'web') {
         alert(`Agendamento confirmado!\n\n${confirmationMessage}\n\nVocê será redirecionado em 3 segundos...`);
@@ -172,13 +203,19 @@ export default function Agendamento() {
       setTimeout(() => {
         router.replace("/");
       }, 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao criar agendamento:", error);
+      console.error("Detalhes do erro:", error.response?.data);
       Alert.alert("Erro", "Não foi possível criar o agendamento. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const filteredClientes = clientes.filter(cliente =>
+    cliente.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cliente.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
@@ -208,7 +245,7 @@ export default function Agendamento() {
           </View>
         )}
 
-        <View className="flex flex-row justify-around mb-6 mx-auto max-w-2xl w-full">
+        <View className="flex-row justify-between items-center mb-6">
           {stepTitles.map((title, index) => {
             const isCurrent = step === index + 1;
             const isCompleted = step > index + 1;
@@ -238,7 +275,7 @@ export default function Agendamento() {
           })}
         </View>
 
-        <View className="bg-white rounded-lg shadow-sm p-6 mx-auto w-full max-w-2xl mb-8">
+        <View className="bg-white rounded-lg p-6 shadow-sm">
           <Text className="text-2xl font-bold text-gray-800 text-center mb-6">
             {stepTitles[step - 1]}
           </Text>
@@ -340,9 +377,53 @@ export default function Agendamento() {
               <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
                 Confirme o Agendamento
               </Text>
+
+              {/* Seleção de Cliente (apenas para barbeiros e admins) */}
+              {userRole !== 'cliente' && (
+                <View className="mb-6">
+                  <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                    Selecione o Cliente:
+                  </Text>
+                  <View className="relative mb-4">
+                    <TextInput
+                      className="bg-gray-100 rounded-lg p-3 pl-10"
+                      placeholder="Buscar cliente por nome ou email..."
+                      value={searchTerm}
+                      onChangeText={setSearchTerm}
+                    />
+                    <Search className="absolute left-3 top-3.5 text-gray-400" size={20} />
+                  </View>
+                  <ScrollView className="max-h-40">
+                    {filteredClientes.map(cliente => (
+                      <TouchableOpacity
+                        key={cliente._id}
+                        className={`p-3 rounded-lg mb-2 ${
+                          selectedCliente?._id === cliente._id
+                            ? 'bg-yellow-500'
+                            : 'bg-gray-100'
+                        }`}
+                        onPress={() => handleClienteSelect(cliente)}
+                      >
+                        <Text className={`${
+                          selectedCliente?._id === cliente._id
+                            ? 'text-white'
+                            : 'text-gray-700'
+                        }`}>
+                          {cliente.name} - {cliente.email}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
               <View className="mt-6 p-4 bg-gray-50 rounded-md">
                 <Text className="font-medium text-lg mb-3 text-center">Resumo do Agendamento</Text>
                 <View className="space-y-2 text-sm">
+                  <View className="flex flex-row justify-between">
+                    <Text className="text-gray-600">Cliente:</Text>
+                    <Text className="font-medium">{selectedCliente?.name}</Text>
+                  </View>
                   <View className="flex flex-row justify-between">
                     <Text className="text-gray-600">Serviço:</Text>
                     <Text className="font-medium">{selectedService?.name}</Text>
@@ -366,7 +447,7 @@ export default function Agendamento() {
             </>
           )}
 
-          <View className="flex-row justify-between mt-8">
+          <View className="flex-row justify-between mt-6">
             <TouchableOpacity
               onPress={handleBack}
               className={`border border-gray-300 rounded-lg px-4 py-2 ${step === 1 ? 'opacity-50' : 'hover:bg-gray-50'}`}
@@ -382,7 +463,7 @@ export default function Agendamento() {
                 (step === 1 && !selectedService) ||
                 (step === 2 && !selectedBarber) ||
                 (step === 3 && !selectedDate) ||
-                (step === 4 && isSubmitting)
+                (step === 4 && (!selectedCliente || isSubmitting))
               }
             >
               {isSubmitting ? (

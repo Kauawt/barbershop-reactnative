@@ -1,6 +1,8 @@
 // src/services/APIService.ts
 import axios from 'axios';
 import { getAuth } from 'firebase/auth';
+import { Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 
 const api = axios.create({
   baseURL: 'http://localhost:5000/api',
@@ -10,26 +12,64 @@ const api = axios.create({
   },
 });
 
-// Função para pegar o token atual do usuário logado via Firebase
-async function getFirebaseToken() {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (user) {
-    return await user.getIdToken(/* forceRefresh= */ false);
+// Função para pegar o token do Firebase
+async function getFirebaseToken(forceRefresh = false) {
+  if (Platform.OS === 'web') {
+    if (forceRefresh) {
+      const user = getAuth().currentUser;
+      if (user) {
+        const newToken = await user.getIdToken(true);
+        localStorage.setItem('token', newToken);
+        return newToken;
+      }
+    }
+    return localStorage.getItem('token');
+  } else {
+    if (forceRefresh) {
+      const user = getAuth().currentUser;
+      if (user) {
+        const newToken = await user.getIdToken(true);
+        await SecureStore.setItemAsync('token', newToken);
+        return newToken;
+      }
+    }
+    return await SecureStore.getItemAsync('token');
   }
-  return null;
 }
 
-// Interceptor para adicionar o token no header Authorization
-api.interceptors.request.use(
-  async (config) => {
+// Interceptor para adicionar o token em todas as requisições
+api.interceptors.request.use(async (config) => {
+  try {
     const token = await getFirebaseToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    return config;
-  },
-  (error) => Promise.reject(error)
+  } catch (error) {
+    console.error("Erro ao obter token:", error);
+  }
+  return config;
+});
+
+// Interceptor para tratar erros de autenticação
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      try {
+        // Tenta atualizar o token
+        const newToken = await getFirebaseToken(true);
+        if (newToken) {
+          // Atualiza o token no header
+          error.config.headers.Authorization = `Bearer ${newToken}`;
+          // Tenta a requisição novamente
+          return api(error.config);
+        }
+      } catch (refreshError) {
+        console.error("Erro ao atualizar token:", refreshError);
+      }
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Serviço de Agendamento
@@ -57,12 +97,11 @@ const AgendamentoService = {
   create: async (agendamentoData: {
     cliente: string;
     usuario: string;
-    dataAgendamento: Date;
+    dataAgendamento: string;
     servicos: Array<{
       servico: string;
       quantidade: number;
     }>;
-    total: number;
   }) => {
     try {
       const response = await api.post('/agendamentos', agendamentoData);
@@ -74,15 +113,13 @@ const AgendamentoService = {
   },
 
   update: async (id: string, updateData: {
-    dataAgendamento?: Date;
+    dataAgendamento?: string;
     cliente?: string;
     usuario?: string;
     servicos?: Array<{
       servico: string;
       quantidade: number;
     }>;
-    total?: number;
-    status?: string;
   }) => {
     try {
       const response = await api.put(`/agendamentos/${id}`, updateData);
@@ -129,10 +166,26 @@ const ClienteService = {
     }
   },
 
+  getById: async (id: string) => {
+    try {
+      const response = await api.get(`/clientes/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar cliente por ID:', error);
+      throw error;
+    }
+  },
+
   getByFirebaseUid: async (firebase_uid: string) => {
     try {
-      const response = await api.get(`/clientes/firebase/${firebase_uid}`);
-      return response.data;
+      // Primeiro, buscar o usuário pelo firebase_uid
+      const userResponse = await api.get(`/usuarios/firebase/${firebase_uid}`);
+      if (userResponse.data && userResponse.data._id) {
+        // Se encontrou o usuário, buscar o cliente pelo ID do MongoDB
+        const clienteResponse = await api.get(`/clientes/${userResponse.data._id}`);
+        return clienteResponse.data;
+      }
+      throw new Error('Usuário não encontrado');
     } catch (error) {
       console.error('Erro ao buscar cliente por firebase_uid:', error);
       throw error;
@@ -140,7 +193,6 @@ const ClienteService = {
   },
 
   create: async (clienteData: {
-    firebase_uid: string;
     name: string;
     email: string;
     senha: string;
@@ -258,6 +310,27 @@ const UsuarioService = {
     }
   },
 
+  getById: async (id: string) => {
+    try {
+      const response = await api.get(`/usuarios/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar usuário por ID:', error);
+      throw error;
+    }
+  },
+
+  getByFirebaseUid: async (firebase_uid: string) => {
+    try {
+      const response = await api.get(`/usuarios/firebase/${firebase_uid}`);
+      // O backend deve retornar o token do MongoDB junto com os dados do usuário
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar usuário por firebase_uid:', error);
+      throw error;
+    }
+  },
+
   getBarbeiros: async () => {
     try {
       const response = await api.get('/usuarios/barbeiros');
@@ -268,24 +341,15 @@ const UsuarioService = {
     }
   },
 
-  getByFirebaseUid: async (firebase_uid: string) => {
-    try {
-      const response = await api.get(`/usuarios/firebase/${firebase_uid}`);
-      return response.data;
-    } catch (error) {
-      console.error('Erro ao buscar usuário por firebase_uid:', error);
-      throw error;
-    }
-  },
-
   create: async (usuarioData: {
     name: string;
     email: string;
     senha: string;
-    telefone: string;
     role: string;
     firebase_uid: string;
-    salario?: number;
+    CPF?: string;
+    dataNascimento?: string;
+    endereco?: string;
   }) => {
     try {
       const response = await api.post('/usuarios', usuarioData);
@@ -300,7 +364,6 @@ const UsuarioService = {
     name?: string;
     email?: string;
     senha?: string;
-    telefone?: string;
     role?: string;
   }) => {
     try {
