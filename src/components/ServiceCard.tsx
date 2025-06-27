@@ -1,8 +1,7 @@
 import React from "react";
-import { TouchableOpacity, View, Text, Image } from "react-native";
+import { TouchableOpacity, View, Text, Image, StyleSheet } from "react-native";
 import { Service } from "../types";
-import { useRouter } from 'expo-router';
-
+import { useRouter } from "expo-router";
 
 interface ServiceCardProps {
   service: Service;
@@ -11,39 +10,94 @@ interface ServiceCardProps {
 
 const ServiceCard = ({ service, showBookButton = true }: ServiceCardProps) => {
   const router = useRouter();
+
   const handleBooking = () => {
     router.push({ pathname: "/agendamento", params: { serviceId: service.id } });
   };
 
   return (
-    <View className="bg-white rounded-lg shadow-lg overflow-hidden">
-      <View className="h-40 overflow-hidden bg-barber-dark">
-        <Image 
-          source={require('../assets/cabelo_simples.jpg')}
-          style={{ width: '100%', height: '100%' }}
+    <View style={styles.card}>
+      <View style={styles.imageContainer}>
+        <Image
+          source={require("../assets/cabelo_simples.jpg")}
+          style={styles.image}
           resizeMode="cover"
         />
       </View>
-      <View className="p-4">
-        <Text className="text-xl font-heading text-barber-dark">{service.name}</Text>
-        <View className="flex-row justify-between items-center">
-          <Text className="text-barber-accent">{service.duration} min</Text>
-          <Text className="text-yellow-500 font-bold">R$ {service.price.toFixed(2)}</Text>
-
+      <View style={styles.content}>
+        <Text style={styles.title}>{service.name}</Text>
+        <View style={styles.infoRow}>
+          <Text style={styles.duration}>{service.duration} min</Text>
+          <Text style={styles.price}>R$ {service.price.toFixed(2)}</Text>
         </View>
-        <Text className="text-gray-600">{service.description}</Text>
+        <Text style={styles.description}>{service.description}</Text>
       </View>
       {showBookButton && (
-        <TouchableOpacity 
-          onPress={handleBooking}
-          className="bg-barber-dark text-white p-3 rounded-lg mt-2"
-        >
-          <Text className="text-center text-black font-semibold">Agendar Agora</Text>
-
+        <TouchableOpacity onPress={handleBooking} style={styles.button}>
+          <Text style={styles.buttonText}>Agendar Agora</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+    marginBottom: 16,
+  },
+  imageContainer: {
+    height: 160, // aproximadamente h-40
+    backgroundColor: "#1f2937", // barber-dark
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  content: {
+    padding: 16,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1f2937", // barber-dark
+    marginBottom: 8,
+  },
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  duration: {
+    color: "#b45309", // barber-accent
+  },
+  price: {
+    color: "#facc15", // yellow-500
+    fontWeight: "bold",
+  },
+  description: {
+    color: "#4b5563", // gray-600
+    fontSize: 14,
+  },
+  button: {
+    backgroundColor: "#1f2937", // barber-dark
+    padding: 12,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    marginTop: 8,
+  },
+  buttonText: {
+    textAlign: "center",
+    color: "#fff",
+    fontWeight: "600",
+  },
+});
 
 export default ServiceCard;

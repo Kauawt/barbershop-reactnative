@@ -1,22 +1,22 @@
-// src/components/inputs/CustomInput.tsx
 import React from 'react';
-import { TextInput, TextInputProps } from 'react-native';
+import { TextInput, TextInputProps, StyleSheet } from 'react-native';
 
 interface CustomInputProps extends TextInputProps {
   placeholder: string;
   secureTextEntry?: boolean;
 }
 
-const CustomInput: React.FC<CustomInputProps> = ({ 
-  placeholder, 
-  value, 
-  onChangeText, 
+const CustomInput: React.FC<CustomInputProps> = ({
+  placeholder,
+  value,
+  onChangeText,
   secureTextEntry = false,
-  ...props 
+  style,
+  ...props
 }) => {
   return (
     <TextInput
-      className="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-gray-800 w-full max-w-xs mx-auto"
+      style={[styles.input, style]} // ⬅️ Mesclando estilo interno com externo
       placeholder={placeholder}
       placeholderTextColor="#9CA3AF"
       value={value}
@@ -26,5 +26,20 @@ const CustomInput: React.FC<CustomInputProps> = ({
     />
   );
 };
+
+const styles = StyleSheet.create({
+  input: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    color: '#1F2937',
+    width: '100%',
+    maxWidth: 360,
+    alignSelf: 'center',
+  },
+});
 
 export default CustomInput;

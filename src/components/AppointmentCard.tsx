@@ -1,7 +1,11 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { Appointment } from "../types";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Appointment, Service, Barber } from "../types";
 import { Calendar, Clock, User } from "lucide-react-native";
+
+// Variáveis simuladas (deverão ser passadas via props/contexto/estado)
+const services: Service[] = [];
+const barbers: Barber[] = [];
 
 interface AppointmentCardProps {
   appointment: Appointment;
@@ -10,50 +14,115 @@ interface AppointmentCardProps {
 const AppointmentCard = ({ appointment }: AppointmentCardProps) => {
   const { serviceId, barberId, date, status, totalPrice } = appointment;
 
-  const service = services.find(s => s.id === serviceId);
-  const barber = barbers.find(b => b.id === barberId);
+  const service = services.find((s) => s.id === serviceId);
+  const barber = barbers.find((b) => b.id === barberId);
 
   const getStatusText = () => {
     switch (status) {
-      case "confirmed": return "Confirmado";
-      case "pending": return "Pendente";
-      case "completed": return "Concluído";
-      case "canceled": return "Cancelado";
-      default: return status;
+      case "confirmed":
+        return "Confirmado";
+      case "pending":
+        return "Pendente";
+      case "completed":
+        return "Concluído";
+      case "canceled":
+        return "Cancelado";
+      default:
+        return status;
     }
   };
 
   return (
-    <View className="bg-white rounded-lg shadow-lg p-4 mb-4">
-      <View className="flex-row justify-between items-center">
-        <Text className="text-lg font-heading text-barber-dark">{service?.name || "Serviço"}</Text>
-        <Text className={`px-2 py-1 rounded-full text-xs font-medium`}>
-          {getStatusText()}
-        </Text>
+    <View style={styles.card}>
+      <View style={styles.header}>
+        <Text style={styles.serviceName}>{service?.name || "Serviço"}</Text>
+        <Text style={styles.status}>{getStatusText()}</Text>
       </View>
-      <Text>R$ {totalPrice.toFixed(2)}</Text>
-      <View className="space-y-2">
-        <View className="flex flex-row items-center">
-          <Calendar className="h-4 w-4 text-barber-accent mr-2" />
+      <Text style={styles.price}>R$ {totalPrice.toFixed(2)}</Text>
+
+      <View style={styles.infoGroup}>
+        <View style={styles.infoRow}>
+          <Calendar size={16} color="#facc15" style={styles.icon} />
           <Text>{new Date(date).toLocaleDateString()}</Text>
         </View>
-        <View className="flex flex-row items-center">
-          <Clock className="h-4 w-4 text-barber-accent mr-2" />
+        <View style={styles.infoRow}>
+          <Clock size={16} color="#facc15" style={styles.icon} />
           <Text>{appointment.time}</Text>
         </View>
-        <View className="flex flex-row items-center">
-          <User className="h-4 w-4 text-barber-accent mr-2" />
+        <View style={styles.infoRow}>
+          <User size={16} color="#facc15" style={styles.icon} />
           <Text>{barber?.name || "Barbeiro"}</Text>
         </View>
       </View>
-      <TouchableOpacity 
+
+      <TouchableOpacity
         onPress={() => console.log(`Cancelando agendamento: ${appointment.id}`)}
-        className="bg-red-500 text-white text-center p-2 rounded-lg mt-2"
+        style={styles.cancelButton}
       >
-        <Text>Cancelar Agendamento</Text>
+        <Text style={styles.cancelText}>Cancelar Agendamento</Text>
       </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  serviceName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#111827",
+  },
+  status: {
+    fontSize: 12,
+    fontWeight: "500",
+    backgroundColor: "#F3F4F6",
+    borderRadius: 8,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    color: "#374151",
+  },
+  price: {
+    fontSize: 14,
+    color: "#111827",
+    marginBottom: 8,
+  },
+  infoGroup: {
+    marginTop: 4,
+  },
+  infoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  icon: {
+    marginRight: 8,
+  },
+  cancelButton: {
+    marginTop: 12,
+    backgroundColor: "#ef4444",
+    borderRadius: 8,
+    paddingVertical: 8,
+    alignItems: "center",
+  },
+  cancelText: {
+    color: "white",
+    fontWeight: "600",
+  },
+});
 
 export default AppointmentCard;

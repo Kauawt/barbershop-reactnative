@@ -1,25 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, useWindowDimensions, Platform } from "react-native";
-import { useRouter } from 'expo-router';
-import { Scissors, Menu, X, User, LogOut } from "lucide-react-native";
-import { getAuth } from "firebase/auth";
-import { signOut } from "firebase/auth";
-import APIService from "../services/APIService";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  Platform,
+  StyleSheet,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Scissors, Menu, X, User } from "lucide-react-native";
 import * as SecureStore from "expo-secure-store";
-import { useAuth } from '../context/auth'
+import { useAuth } from "../context/auth";
+import APIService from "../services/APIService";
+import { getAuth, signOut } from "firebase/auth";
+import app from "../services/firebase";
 
 const Header = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { width } = useWindowDimensions();
-  const auth = useAuth();
+  const { user } = useAuth();
   const [userRole, setUserRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  const currentUser = auth.user;
-  const userName = currentUser?.displayName || currentUser?.email || "Perfil";
-
   const isLargeScreen = width >= 768;
+  const userName = user?.displayName || user?.email || "Perfil";
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -35,20 +40,13 @@ const Header = () => {
           try {
             const userResponse = await APIService.usuario.getByFirebaseUid(uid);
             setUserRole(userResponse.role);
-          } catch (userError) {
-            try {
-              // Se não encontrar como usuário, tenta buscar como cliente
-              const clienteResponse = await APIService.cliente.getByFirebaseUid(uid);
-              setUserRole(clienteResponse.role);
-            } catch (clienteError) {
-              console.error("Erro ao verificar role:", clienteError);
-              setUserRole("");
-            }
+          } catch {
+            const clienteResponse = await APIService.cliente.getByFirebaseUid(uid);
+            setUserRole(clienteResponse.role);
           }
         }
       } catch (error) {
         console.error("Erro ao verificar role:", error);
-        setUserRole("");
       } finally {
         setLoading(false);
       }
@@ -59,7 +57,9 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      const firebaseAuth = getAuth(app);
+      await signOut(firebaseAuth);
+
       if (Platform.OS === "web") {
         localStorage.removeItem("token");
         localStorage.removeItem("uid");
@@ -67,82 +67,208 @@ const Header = () => {
         await SecureStore.deleteItemAsync("token");
         await SecureStore.deleteItemAsync("uid");
       }
-      router.replace('/login');
+
+      router.replace("/login");
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
     }
   };
 
   return (
-    <View className="bg-black py-4 px-4 w-full z-50">
-      <View className="flex-row justify-between items-center">
+    <View style={styles.headerContainer}>
+      <View style={styles.topRow}>
         {/* Logo */}
         <TouchableOpacity
-          className="flex-row items-center"
-          onPress={() => router.replace('/')}
+          style={styles.logoRow}
+          onPress={() => router.replace("/")}
         >
-          <Scissors className="h-6 w-6 text-yellow-400" />
-          <Text className="text-xl font-bold ml-2 text-white">Inova Barbearia</Text>
+          <Scissors color="#FBBF24" size={24} />
+          <Text style={styles.logoText}>Inova Barbearia</Text>
         </TouchableOpacity>
 
         {isLargeScreen ? (
-          <View className="flex-row items-center space-x-6">
-            <TouchableOpacity onPress={() => router.replace('/services')}>
-              <Text className="text-white">Serviços</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.replace('/barbers')}>
-              <Text className="text-white">Barbeiros</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.replace('/agendamento')}>
-              <Text className="text-white">Agendar</Text>
+          <View style={styles.navRow}>
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => router.replace("/services")}
+            >
+              <Text style={styles.navText}>Serviços</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              className="ml-4"
+              style={styles.navItem}
+              onPress={() => router.replace("/barbers")}
+            >
+              <Text style={styles.navText}>Barbeiros</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.navItem}
+              onPress={() => router.replace("/agendamento")}
+            >
+              <Text style={styles.navText}>Agendar</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.logoutButton}
               onPress={handleLogout}
             >
-              <Text className="text-white">Sair</Text>
+              <Text style={styles.logoutText}>Sair</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
-              className="flex-row items-center bg-white border border-yellow-400 rounded-md px-3 py-1 ml-4"
-              onPress={() => router.replace('/profile')}
+              style={styles.profileButton}
+              onPress={() => router.replace("/profile")}
             >
-              <User className="h-4 w-4 text-black mr-2" />
-              <Text className="text-black font-semibold text-sm">{userName}</Text>
+              <User color="black" size={16} style={{ marginRight: 8 }} />
+              <Text style={styles.profileText}>{userName}</Text>
             </TouchableOpacity>
           </View>
         ) : (
-          <TouchableOpacity onPress={() => setIsMenuOpen(!isMenuOpen)} className="p-2">
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setIsMenuOpen(!isMenuOpen)}
+          >
             {isMenuOpen ? (
-              <X className="h-6 w-6 text-white" />
+              <X color="white" size={24} />
             ) : (
-              <Menu className="h-6 w-6 text-white" />
+              <Menu color="white" size={24} />
             )}
           </TouchableOpacity>
         )}
       </View>
 
+      {/* Mobile Menu */}
       {!isLargeScreen && isMenuOpen && (
-        <View className="mt-2 px-4 py-2 bg-black rounded-lg shadow-md">
-          <TouchableOpacity onPress={() => { router.replace('/services'); setIsMenuOpen(false); }} className="py-2">
-            <Text className="text-white">Serviços</Text>
+        <View style={styles.mobileMenu}>
+          <TouchableOpacity
+            style={styles.mobileMenuItem}
+            onPress={() => {
+              router.replace("/services");
+              setIsMenuOpen(false);
+            }}
+          >
+            <Text style={styles.mobileMenuText}>Serviços</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { router.replace('/barbers'); setIsMenuOpen(false); }} className="py-2">
-            <Text className="text-white">Barbeiros</Text>
+          <TouchableOpacity
+            style={styles.mobileMenuItem}
+            onPress={() => {
+              router.replace("/barbers");
+              setIsMenuOpen(false);
+            }}
+          >
+            <Text style={styles.mobileMenuText}>Barbeiros</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { router.replace('/agendamento'); setIsMenuOpen(false); }} className="py-2">
-            <Text className="text-white">Agendar</Text>
+          <TouchableOpacity
+            style={styles.mobileMenuItem}
+            onPress={() => {
+              router.replace("/agendamento");
+              setIsMenuOpen(false);
+            }}
+          >
+            <Text style={styles.mobileMenuText}>Agendar</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { handleLogout(); setIsMenuOpen(false); }} className="py-2">
-            <Text className="text-red-400">Sair</Text>
+          <TouchableOpacity
+            style={styles.mobileMenuItem}
+            onPress={() => {
+              handleLogout();
+              setIsMenuOpen(false);
+            }}
+          >
+            <Text style={styles.mobileLogoutText}>Sair</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => { router.replace('/profile'); setIsMenuOpen(false); }} className="py-2">
-            <Text className="text-barber-gold">Perfil</Text>
+          <TouchableOpacity
+            style={styles.mobileMenuItem}
+            onPress={() => {
+              router.replace("/profile");
+              setIsMenuOpen(false);
+            }}
+          >
+            <Text style={styles.mobileProfileText}>Perfil</Text>
           </TouchableOpacity>
         </View>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    backgroundColor: "black",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    width: "100%",
+    zIndex: 50,
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "700",
+    marginLeft: 8,
+  },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  navItem: {
+    marginLeft: 24,
+  },
+  navText: {
+    color: "white",
+  },
+  logoutButton: {
+    marginLeft: 24,
+  },
+  logoutText: {
+    color: "white",
+  },
+  profileButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "white",
+    borderWidth: 1,
+    borderColor: "#FBBF24",
+    borderRadius: 6,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    marginLeft: 24,
+  },
+  profileText: {
+    color: "black",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  menuButton: {
+    padding: 8,
+  },
+  mobileMenu: {
+    marginTop: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: "black",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  mobileMenuItem: {
+    paddingVertical: 8,
+  },
+  mobileMenuText: {
+    color: "white",
+  },
+  mobileLogoutText: {
+    color: "#F87171",
+  },
+  mobileProfileText: {
+    color: "#FBBF24",
+  },
+});
 
 export default Header;

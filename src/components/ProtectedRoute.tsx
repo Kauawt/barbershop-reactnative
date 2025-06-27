@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useRouter, useSegments } from "expo-router";
-import { getAuth } from "firebase/auth";
-import { useAuth } from '../context/auth'
+import { useAuth } from '../context/auth';
 
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
@@ -16,12 +15,14 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const segments = useSegments();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const auth = useAuth()
+  const auth = useAuth();
+
+  // Defina aqui as rotas que NÃO precisam de autenticação
+  const publicRoutes = ["register", "cadastro"];
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const user = auth.user;
         let token = null;
         let uid = null;
 
@@ -33,19 +34,26 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           uid = await SecureStore.getItemAsync("uid");
         }
 
-        const isAuth = !!(user && token && uid);
+        // Autenticação baseada apenas na presença do token e uid
+        const isAuth = !!(token && uid);
         setIsAuthenticated(isAuth);
 
+        const currentRoute = segments[0] ?? ""; // pega a primeira parte da rota
+        const isPublicPage = publicRoutes.includes(currentRoute.toLowerCase());
 
-        if (!isAuth) {
-          const isPublicPage = segments[0] === "login" || segments[0] === "cadastro";
-          if (!isPublicPage) {
-            router.replace("/Home");
-          }
+        if (!isAuth && !isPublicPage) {
+          // Usuário não autenticado tentando acessar rota protegida
+          router.replace("/login");
+        }
+
+        if (isAuth && isPublicPage) {
+          // Usuário autenticado tentando acessar página pública (login, cadastro)
+          router.replace("/");
         }
       } catch (error) {
         console.error("Erro ao verificar autenticação:", error);
         setIsAuthenticated(false);
+        router.replace("/login");
       } finally {
         setIsLoading(false);
       }
@@ -56,11 +64,11 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (isLoading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#b58900" />
       </View>
     );
   }
 
   return <>{children}</>;
-} 
+}

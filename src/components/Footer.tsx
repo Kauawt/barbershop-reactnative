@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Scissors } from "lucide-react-native";
 
@@ -7,48 +7,49 @@ const Footer = () => {
   const router = useRouter();
 
   return (
-    <View className="bg-black py-4 px-4">
-      <View className="max-w-6xl mx-auto">
-        <View className="flex flex-row justify-between items-center">
-          <View className="flex-1 items-center md:items-start">
-            <View className="flex flex-row items-center mb-2">
-              <Scissors className="h-5 w-5 text-yellow-500" />
-              <Text className="text-white text-lg font-bold ml-2">Inova Barbearia</Text>
+    <View style={styles.footerContainer}>
+      <View style={styles.innerContainer}>
+        <View style={styles.topRow}>
+          <View style={[styles.flex1, styles.alignStart]}>
+            <View style={styles.logoRow}>
+              <Scissors color="#FBBF24" size={20} />
+              <Text style={styles.logoText}>Inova Barbearia</Text>
             </View>
           </View>
 
-          <View className="flex-row space-x-8">
-            <View className="items-center md:items-start">
-              <Text className="text-yellow-500 font-semibold mb-2">Links</Text>
-              <View className="space-y-2">
+          <View style={styles.linksAndContactRow}>
+            <View style={styles.linkSection}>
+              <Text style={styles.sectionTitle}>Links</Text>
+              <View>
                 <TouchableOpacity onPress={() => router.push("/")}>
-                  <Text className="text-gray-300">Home</Text>
+                  <Text style={styles.linkText}>Home</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => router.push("/services")}>
-                  <Text className="text-gray-300">Serviços</Text>
+                  <Text style={styles.linkText}>Serviços</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => router.push("/barbers")}>
-                  <Text className="text-gray-300">Barbeiros</Text>
+                  <Text style={styles.linkText}>Barbeiros</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => router.push("/agendamento")}>
-                  <Text className="text-gray-300">Agendar</Text>
+                  <Text style={styles.linkText}>Agendar</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
-            <View className="items-center md:items-start">
-              <Text className="text-yellow-500 font-semibold mb-2">Contato</Text>
-              <View className="space-y-2">
-                <Text className="text-gray-300">Rua Dom Pedro I, 65 - Centro</Text>
-                <Text className="text-gray-300">Indaiatuba - SP</Text>
-                <Text className="text-gray-300">(11) 99880-0206</Text>
-                <Text className="text-gray-300">inova_barber@gmail.com</Text>
+            <View style={styles.linkSection}>
+              <Text style={styles.sectionTitle}>Contato</Text>
+              <View>
+                <Text style={styles.linkText}>Rua Dom Pedro I, 65 - Centro</Text>
+                <Text style={styles.linkText}>Indaiatuba - SP</Text>
+                <Text style={styles.linkText}>(11) 99880-0206</Text>
+                <Text style={styles.linkText}>inova_barber@gmail.com</Text>
               </View>
             </View>
           </View>
         </View>
-        <View className="border-t border-gray-700 pt-3 mt-3">
-          <Text className="text-gray-400 text-center">
+
+        <View style={styles.bottomRow}>
+          <Text style={styles.bottomText}>
             &copy; {new Date().getFullYear()} InnovaTech Solutions. Todos os direitos reservados.
           </Text>
         </View>
@@ -56,5 +57,65 @@ const Footer = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  footerContainer: {
+    backgroundColor: "black",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  innerContainer: {
+    maxWidth: 960, // equivalente a max-w-6xl (aprox 960px)
+    alignSelf: "center",
+  },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  flex1: {
+    flex: 1,
+  },
+  alignStart: {
+    alignItems: "flex-start",
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  logoText: {
+    color: "white",
+    fontSize: 18, // text-lg
+    fontWeight: "700", // font-bold
+    marginLeft: 8,
+  },
+  linksAndContactRow: {
+    flexDirection: "row",
+    gap: 32, // espaço entre as seções (equivale a space-x-8)
+  },
+  linkSection: {
+    alignItems: "center",
+  },
+  sectionTitle: {
+    color: "#FBBF24", // yellow-500
+    fontWeight: "600", // font-semibold
+    marginBottom: 8,
+  },
+  linkText: {
+    color: "#D1D5DB", // gray-300
+    marginBottom: 4,
+  },
+  bottomRow: {
+    borderTopWidth: 1,
+    borderTopColor: "#374151", // gray-700
+    paddingTop: 12,
+    marginTop: 12,
+  },
+  bottomText: {
+    color: "#9CA3AF", // gray-400
+    textAlign: "center",
+  },
+});
 
 export default Footer;
