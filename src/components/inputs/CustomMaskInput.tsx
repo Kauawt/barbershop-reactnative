@@ -42,14 +42,14 @@ const CustomMaskInput: React.FC<CustomMaskInputProps> = ({
 
 const styles = StyleSheet.create({
   input: {
-    backgroundColor: '#F3F4F6', // bg-gray-100
+    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#D1D5DB', // border-gray-300
-    borderRadius: 12, // rounded-lg
+    borderColor: '#D1D5DB',
+    borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 16,
-    marginBottom: 16, // mb-4
-    color: '#1F2937', // text-gray-800
+    marginBottom: 16, 
+    color: '#1F2937',
     width: '100%',
     maxWidth: 360,
     alignSelf: 'center',

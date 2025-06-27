@@ -6,7 +6,7 @@ import * as SecureStore from 'expo-secure-store'
 import Constants from 'expo-constants'
 import { router } from 'expo-router';
 
-const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://192.168.15.16:5000/api'
+const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://192.168.1.5:5000/api'
 
 const api = axios.create({
   baseURL: API_URL,
@@ -15,7 +15,6 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-
 
 async function getToken(): Promise<string | null> {
   return await SecureStore.getItemAsync('token');

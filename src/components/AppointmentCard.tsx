@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Appointment, Service, Barber } from "../types";
 import { Calendar, Clock, User } from "lucide-react-native";
 
-// Variáveis simuladas (deverão ser passadas via props/contexto/estado)
 const services: Service[] = [];
 const barbers: Barber[] = [];
 

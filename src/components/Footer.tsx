@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   innerContainer: {
-    maxWidth: 960, // equivalente a max-w-6xl (aprox 960px)
+    maxWidth: 960,
     alignSelf: "center",
   },
   topRow: {
@@ -86,34 +86,34 @@ const styles = StyleSheet.create({
   },
   logoText: {
     color: "white",
-    fontSize: 18, // text-lg
-    fontWeight: "700", // font-bold
+    fontSize: 18,
+    fontWeight: "700",
     marginLeft: 8,
   },
   linksAndContactRow: {
     flexDirection: "row",
-    gap: 32, // espaço entre as seções (equivale a space-x-8)
+    gap: 32,
   },
   linkSection: {
     alignItems: "center",
   },
   sectionTitle: {
-    color: "#FBBF24", // yellow-500
-    fontWeight: "600", // font-semibold
+    color: "#FBBF24",
+    fontWeight: "600",
     marginBottom: 8,
   },
   linkText: {
-    color: "#D1D5DB", // gray-300
+    color: "#D1D5DB",
     marginBottom: 4,
   },
   bottomRow: {
     borderTopWidth: 1,
-    borderTopColor: "#374151", // gray-700
+    borderTopColor: "#374151",
     paddingTop: 12,
     marginTop: 12,
   },
   bottomText: {
-    color: "#9CA3AF", // gray-400
+    color: "#9CA3AF",
     textAlign: "center",
   },
 });

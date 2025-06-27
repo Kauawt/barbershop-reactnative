@@ -1,15 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import ServiceCard from '../components/ServiceCard';
-import { Service } from '../types';
-import APIService from '../services/APIService';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+  StyleSheet,
+  useWindowDimensions,
+} from "react-native";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+import ServiceCard from "../components/ServiceCard";
+import { Service } from "../types";
+import APIService from "../services/APIService";
 
 export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { width } = useWindowDimensions();
+
+  const getColumnWidth = () => {
+    if (width >= 1024) return "31%"; 
+    if (width >= 768) return "48%";
+    return "100%";
+  };
 
   useEffect(() => {
     async function fetchServices() {
@@ -23,11 +38,11 @@ export default function Services() {
             price: srv.price,
             duration: srv.duracao,
             image: srv.image,
-            description: srv.description ?? 'Descrição não disponível',
+            description: srv.description ?? "Descrição não disponível",
           }));
         setServices(adaptedServices);
       } catch (err) {
-        setError('Erro ao carregar os serviços.');
+        setError("Erro ao carregar os serviços.");
         console.error(err);
       } finally {
         setLoading(false);
@@ -38,25 +53,28 @@ export default function Services() {
   }, []);
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={styles.container}>
       <Header />
-      <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-        <View className="bg-black/30 py-12 px-4">
-          <Text className="text-3xl font-bold text-yellow-500 text-center mb-4">
-            Nossos Serviços
-          </Text>
-          <Text className="text-white text-center max-w-[90%] mx-auto">
-            Conheça nossa variedade de serviços de barbearia premium, executados por profissionais qualificados para proporcionar a melhor experiência.
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.hero}>
+          <Text style={styles.title}>Nossos Serviços</Text>
+          <Text style={styles.subtitle}>
+            Conheça nossa variedade de serviços de barbearia premium, executados por
+            profissionais qualificados para proporcionar a melhor experiência.
           </Text>
         </View>
-        <View className="py-10 px-4">
+
+        <View style={styles.servicesSection}>
           {loading && <ActivityIndicator size="large" color="#facc15" />}
-          {error && <Text className="text-red-600 text-center">{error}</Text>}
+          {error && <Text style={styles.errorText}>{error}</Text>}
 
           {!loading && !error && (
-            <View className="flex flex-row flex-wrap justify-between gap-4">
-              {services.map(service => (
-                <View key={service.id} className="w-full md:w-[48%] lg:w-[31%]">
+            <View style={styles.cardsContainer}>
+              {services.map((service) => (
+                <View
+                  key={service.id}
+                  style={[styles.cardWrapper, { width: getColumnWidth() }]}
+                >
                   <ServiceCard service={service} />
                 </View>
               ))}
@@ -65,8 +83,54 @@ export default function Services() {
         </View>
         <Footer />
       </ScrollView>
-
-      
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  hero: {
+    backgroundColor: "rgba(0, 0, 0, 0.3)",
+    paddingVertical: 48,
+    paddingHorizontal: 16,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#facc15",
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  subtitle: {
+    color: "#ffffff",
+    textAlign: "center",
+    maxWidth: 600,
+    alignSelf: "center",
+    fontSize: 16,
+  },
+  servicesSection: {
+    paddingVertical: 40,
+    paddingHorizontal: 16,
+  },
+  errorText: {
+    color: "#dc2626", 
+    textAlign: "center",
+    marginTop: 16,
+    fontSize: 16,
+  },
+  cardsContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    gap: 16,
+  },
+  cardWrapper: {
+    marginBottom: 16,
+  },
+});

@@ -1,144 +1,150 @@
 # Inova Barbearia: Aplicativo de Barbearia
 
-Este é um aplicativo móvel e web de barbearia construído com React Native e Expo, projetado para facilitar o agendamento de serviços, gerenciamento de usuários e perfis, e exibição de barbeiros e serviços. O aplicativo se integra a um backend MERN Stack (MongoDB, Express.js, React, Node.js) para gerenciamento de dados.
+Este é um aplicativo completo (mobile e web) de barbearia construído com **React Native + Expo**, projetado para clientes, barbeiros e administradores. Permite o agendamento de serviços, gerenciamento de usuários, exibição de profissionais e muito mais. A aplicação integra um backend **MERN Stack (MongoDB, Express.js, React, Node.js)**, garantindo robustez e escalabilidade.
 
-## Funcionalidades
+---
 
--   **Autenticação de Usuário**: Login e registro de usuários com Firebase Authentication.
--   **Gerenciamento de Perfil**: Visualização e atualização de informações do perfil do usuário.
--   **Agendamento de Serviços**:
-    -   Processo de agendamento em múltiplas etapas.
-    -   Seleção dinâmica de serviços e barbeiros disponíveis.
-    -   Seleção de data para o agendamento.
-    -   Confirmação e resumo do agendamento.
--   **Exibição de Serviços e Barbeiros**: Páginas dedicadas para listar todos os serviços e barbeiros, com cards informativos.
--   **Registro de Novos Usuários (Admin/Barbeiro)**:
-    -   Página de cadastro com campos diferenciados baseados na função do usuário logado (Admin registra barbeiros, Barbeiro registra clientes).
-    -   Integração com Firebase para criação de usuários.
--   **Proteção de Rotas**: Componente `ProtectedRoute` para garantir que apenas usuários autenticados e com as permissões corretas possam acessar determinadas páginas.
--   **Header Dinâmico**: Header que se adapta com base no status de autenticação e na função do usuário, exibindo opções relevantes (ex: botão de registro para admins/barbeiros).
--   **Layout Responsivo**: Estilização com Tailwind CSS para garantir uma experiência de usuário agradável em diferentes dispositivos e plataformas (web e mobile).
--   **Integração com Backend**: Consumo de APIs RESTful para buscar, criar e atualizar dados de serviços, usuários (barbeiros e clientes) e agendamentos.
+## ✨ Funcionalidades
 
-## Tecnologias Utilizadas
+- **Autenticação de Usuário**: Cadastro, login e logout via Firebase Authentication.
+- **Recuperação de Senha**: Fluxo de "Esqueci minha senha" com redirecionamento e recuperação por e-mail.
+- **Gerenciamento de Perfil**: Atualização e exibição de dados pessoais.
+- **Agendamento de Serviços**:
+  - Fluxo em 4 etapas com seleção de serviço, barbeiro, data e horário.
+  - Listagem de agendamentos com opção de cancelamento.
+- **Cadastro de Usuários por Função**:
+  - Admins podem cadastrar novos barbeiros.
+  - Barbeiros podem cadastrar clientes diretamente pelo sistema.
+- **Exibição de Serviços e Barbeiros**:
+  - Páginas responsivas com cards contendo nome, imagem, descrição, preço e tempo de duração.
+- **Proteção de Rotas**: Autorização condicional via componente `ProtectedRoute` e `AuthProvider`.
+- **Layout Responsivo**: Funciona em dispositivos mobile e navegadores web com NativeWind (Tailwind CSS para React Native).
 
--   **Frontend**:
-    -   React Native
-    -   Expo
-    -   Expo Router
-    -   Tailwind CSS (via NativeWind)
-    -   Axios para requisições HTTP
-    -   Firebase Authentication (para autenticação de usuário)
-    -   `@react-native-community/datetimepicker` para seleção de data
-    -   `expo-secure-store` para armazenamento seguro de tokens e IDs de usuário
-    -   `lucide-react-native` para ícones
--   **Backend**:
-    -   Node.js
-    -   Express.js
-    -   MongoDB (Mongoose ODM)
-    -   Firebase Admin SDK (para verificação de token, se implementado)
+---
 
-## Configuração do Ambiente
+## 🧰 Tecnologias Utilizadas
+
+### **Frontend (Expo + React Native)**
+- React Native (com suporte Web)
+- Expo Router (navegação)
+- Firebase Authentication
+- Tailwind via NativeWind
+- Axios (requisições HTTP)
+- `expo-secure-store` (armazenamento seguro)
+- `@react-native-community/datetimepicker` (seletor de data)
+- `lucide-react-native` (ícones SVG)
+
+### **Backend (MERN Stack)**
+- Node.js + Express
+- MongoDB + Mongoose
+- Firebase Admin SDK (verificação de token de autenticação)
+
+---
+
+## ⚙️ Configuração do Ambiente
 
 ### Pré-requisitos
+- Node.js (18+)
+- npm ou yarn
+- Expo CLI (`npm install -g expo-cli`)
+- Firebase Console configurado
+- Instância MongoDB (local ou Atlas)
 
-Antes de começar, certifique-se de ter instalado:
+### Passo a Passo
 
--   Node.js (versão 18.x ou superior recomendada)
--   npm ou Yarn
--   Expo CLI (`npm install -g expo-cli`)
--   Uma instância do MongoDB rodando (localmente ou na nuvem)
--   Um projeto Firebase configurado (com autenticação ativada)
+1. **Clone o repositório**
+```bash
+git clone <URL_DO_REPOSITORIO>
+cd barbershop-reactnative
+```
 
-### Configuração do Projeto
+2. **Instale as dependências**
+```bash
+npm install
+# ou
+yarn install
+```
 
-1.  **Clone o Repositório**:
-    ```bash
-    git clone <URL_DO_SEU_REPOSITORIO>
-    cd barbershop-reactnative
-    ```
+3. **Configure o Firebase**
+Crie `src/services/firebase.ts` com suas credenciais:
+```ts
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 
-2.  **Instale as Dependências**:
-    ```bash
-    npm install
-    # ou
-    yarn install
-    ```
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
 
-3.  **Configuração do Firebase**:
-    Crie um arquivo `src/services/firebase.ts` com suas credenciais do Firebase:
-    ```typescript
-    // src/services/firebase.ts
-    import { initializeApp } from 'firebase/app';
-    import { getAuth } from 'firebase/auth';
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+```
 
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+4. **Configuração do Backend**
+O app espera um backend rodando em `http://localhost:5000/api`. As rotas esperadas incluem:
 
-    const app = initializeApp(firebaseConfig);
-    export default app;
-    ```
+**Serviços**
+- `GET /api/servicos`
+- `POST /api/servicos`
+- `PUT /api/servicos/:id`
+- `DELETE /api/servicos/:id`
 
-4.  **Configuração do Backend (MERN Stack)**:
-    Este frontend espera se comunicar com um backend MERN Stack rodando em `http://localhost:5000/api`. Certifique-se de que seu backend esteja configurado com as seguintes rotas e lógicas:
+**Usuários**
+- `GET /api/usuarios`
+- `GET /api/usuarios/barbeiros`
+- `GET /api/usuarios/firebase/:firebase_uid`
+- `POST /api/usuarios`
 
-    -   **Serviços**:
-        -   `GET /api/servicos`: Retorna todos os serviços.
-        -   `POST /api/servicos`: Cria um novo serviço.
-        -   `PUT /api/servicos/:id`: Atualiza um serviço.
-        -   `DELETE /api/servicos/:id`: Deleta um serviço.
-    -   **Usuários (incluindo Barbeiros e Clientes)**:
-        -   `GET /api/usuarios`: Retorna todos os usuários.
-        -   `GET /api/usuarios/barbeiros`: Retorna apenas os usuários com a função 'barbeiro'.
-        -   `GET /api/usuarios/firebase/:firebase_uid`: Retorna um usuário específico pelo seu UID do Firebase.
-        -   `POST /api/usuarios`: Cria um novo usuário (para registro de barbeiros por admins).
-    -   **Clientes**:
-        -   `POST /api/clientes`: Cria um novo cliente (para registro de clientes por barbeiros).
-        -   `GET /api/clientes/firebase/:firebase_uid`: Retorna um cliente específico pelo seu UID do Firebase.
-    -   **Agendamentos**:
-        -   `GET /api/agendamentos`: Retorna todos os agendamentos.
-        -   `POST /api/agendamentos`: Cria um novo agendamento.
-        -   `PUT /api/agendamentos/:id`: Atualiza um agendamento.
-        -   `DELETE /api/agendamentos/:id`: Deleta um agendamento.
+**Clientes**
+- `POST /api/clientes`
+- `GET /api/clientes/firebase/:firebase_uid`
 
-    Certifique-se de que seu backend esteja conectado ao MongoDB e que as rotas correspondam às chamadas feitas no `APIService.ts`.
+**Agendamentos**
+- `GET /api/agendamentos`
+- `POST /api/agendamentos`
+- `PUT /api/agendamentos/:id`
+- `DELETE /api/agendamentos/:id`
 
-5.  **Rodar a Aplicação**:
+5. **Execute a aplicação**
 
-    -   **Para Web**:
-        ```bash
-        npm run web
-        # ou
-        yarn web
-        ```
-        Abra `http://localhost:19006` (ou a porta indicada) no seu navegador.
+- Web:
+```bash
+npm run web
+```
 
-    -   **Para Android/iOS (com Expo Go)**:
-        ```bash
-        npm start
-        # ou
-        yarn start
-        ```
-        Escaneie o código QR com o aplicativo Expo Go no seu dispositivo móvel.
+- Mobile (Expo Go):
+```bash
+npm start
+```
+Escaneie o QR code com o app **Expo Go**.
 
-## Estrutura do Projeto
+---
+
+## 📁 Estrutura do Projeto
 
 ```
 .
 ├── src/
-│   ├── app/                # Páginas principais (login, agendamento, profile, etc.)
-│   ├── components/         # Componentes reutilizáveis (Header, Footer, ServiceCard, etc.)
-│   ├── services/           # Serviços de API (APIService, firebase.ts)
-│   ├── types/              # Definições de tipos (TypeScript)
-│   └── assets/             # Imagens, fontes, etc.
-├── app.json
+│   ├── app/              # Páginas e rotas principais
+│   ├── components/       # Componentes reutilizáveis
+│   ├── context/          # Contexto de autenticação (AuthProvider)
+│   ├── services/         # Serviços API, Firebase e helpers
+│   ├── types/            # Interfaces TypeScript
+│   └── assets/           # Ícones, imagens e fontes
+├── app.json              # Configurações do Expo
 ├── package.json
 └── README.md
 ```
+
+---
+
+## 📌 Observações
+- O projeto está em constante evolução, com planos para suporte a notificações push, histórico de agendamentos e avaliações de serviços/barbeiros.
+- Sugestões, pull requests e contribuições são bem-vindas!
+
+---
 
