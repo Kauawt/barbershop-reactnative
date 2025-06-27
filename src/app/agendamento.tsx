@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   redirectContainer: {
-    backgroundColor: '#d1fae5', // green-100
+    backgroundColor: '#d1fae5',
     padding: 12,
     marginBottom: 16,
     borderRadius: 8,
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     maxWidth: 400
   },
   redirectText: {
-    color: '#065f46', // green-800
+    color: '#065f46',
     textAlign: 'center',
   },
   stepsContainer: {
@@ -445,7 +445,7 @@ const styles = StyleSheet.create({
     width: 40,
     borderRadius: 20,
     borderWidth: 2,
-    borderColor: '#d1d5db', // gray-300
+    borderColor: '#d1d5db',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -454,7 +454,7 @@ const styles = StyleSheet.create({
     borderColor: 'black'
   },
   stepCircleCompleted: {
-    backgroundColor: '#f59e0b', // yellow-500
+    backgroundColor: '#f59e0b',
     borderColor: '#f59e0b',
   },
   stepCirclePending: {
@@ -471,7 +471,7 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   stepNumberPending: {
-    color: '#9ca3af', // gray-400
+    color: '#9ca3af',
   },
   stepTitle: {
     marginTop: 8,
@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   stepTitlePending: {
-    color: '#6b7280', // gray-500
+    color: '#6b7280',
   },
   stepContent: {
     backgroundColor: 'white',
@@ -499,7 +499,7 @@ const styles = StyleSheet.create({
   stepHeader: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#374151', // gray-800
+    color: '#374151',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -525,10 +525,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionBoxDefault: {
-    backgroundColor: '#f3f4f6', // gray-100
+    backgroundColor: '#f3f4f6',
   },
   optionBoxSelected: {
-    backgroundColor: '#f59e0b', // yellow-500
+    backgroundColor: '#f59e0b',
     shadowColor: '#f59e0b',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.8,
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   optionTextDefault: {
-    color: '#374151', // gray-700
+    color: '#374151',
   },
   optionTextSelected: {
     color: 'white',
@@ -551,13 +551,13 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   optionSubTextDefault: {
-    color: '#6b7280', // gray-500
+    color: '#6b7280',
   },
   optionSubTextSelected: {
     color: 'white',
   },
   datePickerTouchable: {
-    backgroundColor: '#f3f4f6', // gray-100
+    backgroundColor: '#f3f4f6',
     borderRadius: 8,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -572,7 +572,7 @@ const styles = StyleSheet.create({
   },
   summaryBox: {
     marginTop: 16,
-    backgroundColor: '#f9fafb', // gray-50
+    backgroundColor: '#f9fafb',
     borderRadius: 8,
     padding: 16,
   },
@@ -588,7 +588,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   summaryLabel: {
-    color: '#4b5563', // gray-600
+    color: '#4b5563',
     fontSize: 16,
   },
   summaryValue: {
@@ -597,14 +597,14 @@ const styles = StyleSheet.create({
   },
   summaryTotal: {
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb', // gray-200
+    borderTopColor: '#e5e7eb',
     paddingTop: 8,
     marginTop: 8,
   },
   summaryTotalValue: {
     fontWeight: '700',
     fontSize: 16,
-    color: '#f59e0b', // yellow-500
+    color: '#f59e0b',
   },
   buttonsRow: {
     flexDirection: 'row',
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#d1d5db', // gray-300
+    borderColor: '#d1d5db',
     justifyContent: 'center',
     alignItems: 'center',
     minWidth: 100,
@@ -625,13 +625,13 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonPrimary: {
-    backgroundColor: '#f59e0b', // yellow-500
+    backgroundColor: '#f59e0b',
     borderColor: '#f59e0b',
     marginLeft: 12,
   },
   buttonText: {
     fontSize: 16,
-    color: '#374151', // gray-700
+    color: '#374151', 
   },
   buttonTextPrimary: {
     color: 'white',

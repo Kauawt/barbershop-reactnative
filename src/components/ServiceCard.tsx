@@ -53,8 +53,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   imageContainer: {
-    height: 160, // aproximadamente h-40
-    backgroundColor: "#1f2937", // barber-dark
+    height: 160,
+    backgroundColor: "#1f2937",
   },
   image: {
     width: "100%",
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#1f2937", // barber-dark
+    color: "#1f2937",
     marginBottom: 8,
   },
   infoRow: {
@@ -76,18 +76,18 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   duration: {
-    color: "#b45309", // barber-accent
+    color: "#b45309",
   },
   price: {
-    color: "#facc15", // yellow-500
+    color: "#facc15",
     fontWeight: "bold",
   },
   description: {
-    color: "#4b5563", // gray-600
+    color: "#4b5563",
     fontSize: 14,
   },
   button: {
-    backgroundColor: "#1f2937", // barber-dark
+    backgroundColor: "#1f2937",
     padding: 12,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,

@@ -16,7 +16,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 }) => {
   return (
     <TextInput
-      style={[styles.input, style]} // ⬅️ Mesclando estilo interno com externo
+      style={[styles.input, style]}
       placeholder={placeholder}
       placeholderTextColor="#9CA3AF"
       value={value}

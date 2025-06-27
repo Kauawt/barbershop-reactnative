@@ -1,10 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { User as UserIcon, Loader2 } from "lucide-react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { useAuth } from '../context/auth'
+import { useAuth } from '../context/auth';
 import APIService from "../services/APIService";
 
 export default function Profile() {
@@ -13,23 +22,9 @@ export default function Profile() {
   const [user, setUser] = useState(auth.user);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
-
   const [tab, setTab] = useState<"personal" | "address">("personal");
-
-  const [personalInfo, setPersonalInfo] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-
-  const [address, setAddress] = useState({
-    street: "",
-    number: "",
-    city: "",
-    state: "",
-    zipCode: "",
-  });
-
+  const [personalInfo, setPersonalInfo] = useState({ name: "", email: "", phone: "" });
+  const [address, setAddress] = useState({ street: "", number: "", city: "", state: "", zipCode: "" });
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -40,11 +35,7 @@ export default function Profile() {
           const response = await APIService.cliente.getByFirebaseUid(user.uid);
           if (response) {
             setUserData(response);
-            setPersonalInfo({
-              name: response.name || "",
-              email: response.email || "",
-              phone: response.phone || "",
-            });
+            setPersonalInfo({ name: response.name || "", email: response.email || "", phone: response.phone || "" });
             setAddress({
               street: response.address?.street || "",
               number: response.address?.number || "",
@@ -62,7 +53,6 @@ export default function Profile() {
       }
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -78,11 +68,7 @@ export default function Profile() {
     setIsSaving(true);
     try {
       if (userData) {
-        await APIService.cliente.update(userData._id, {
-          name: personalInfo.name,
-          email: personalInfo.email,
-          phone: personalInfo.phone,
-        });
+        await APIService.cliente.update(userData._id, personalInfo);
         Alert.alert("Sucesso", "Informações atualizadas com sucesso!");
       }
     } catch (error) {
@@ -97,9 +83,7 @@ export default function Profile() {
     setIsSaving(true);
     try {
       if (userData) {
-        await APIService.cliente.update(userData._id, {
-          address: address,
-        });
+        await APIService.cliente.update(userData._id, { address });
         Alert.alert("Sucesso", "Endereço atualizado com sucesso!");
       }
     } catch (error) {
@@ -111,166 +95,62 @@ export default function Profile() {
   };
 
   if (loading) {
-    return (
-      <View className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color="#b58900" />
-      </View>
-    );
+    return <View style={styles.center}><ActivityIndicator size="large" color="#b58900" /></View>;
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={styles.container}>
       <Header />
-      <ScrollView contentContainerStyle={{ paddingBottom: 60 }}>
-        <View className="bg-barber-dark p-8 items-center">
-          <View className="w-24 h-24 rounded-full bg-barber-gold/20 flex items-center justify-center mb-4">
-            <UserIcon size={48} color="#b58900" />
-          </View>
-          <Text className="text-2xl font-semibold text-barber-gold">{userData?.name || ""}</Text>
-          <Text className="text-gray-300">{userData?.email || ""}</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.profileHeader}>
+          <View style={styles.profileIcon}><UserIcon size={48} color="#b58900" /></View>
+          <Text style={styles.name}>{userData?.name || ""}</Text>
+          <Text style={styles.email}>{userData?.email || ""}</Text>
         </View>
 
-        {/* Tabs */}
-        <View className="flex-row mt-6 mx-4 border-b border-gray-300">
-          <TouchableOpacity
-            className={`flex-1 py-3 items-center border-b-2 ${
-              tab === "personal" ? "border-barber-gold" : "border-transparent"
-            }`}
-            onPress={() => setTab("personal")}
-          >
-            <Text className={`font-semibold ${tab === "personal" ? "text-barber-gold" : "text-gray-500"}`}>
-              Informações Pessoais
-            </Text>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity style={[styles.tab, tab === "personal" && styles.activeTab]} onPress={() => setTab("personal")}>
+            <Text style={[styles.tabText, tab === "personal" && styles.activeTabText]}>Informações Pessoais</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            className={`flex-1 py-3 items-center border-b-2 ${
-              tab === "address" ? "border-barber-gold" : "border-transparent"
-            }`}
-            onPress={() => setTab("address")}
-          >
-            <Text className={`font-semibold ${tab === "address" ? "text-barber-gold" : "text-gray-500"}`}>
-              Endereço
-            </Text>
+          <TouchableOpacity style={[styles.tab, tab === "address" && styles.activeTab]} onPress={() => setTab("address")}>
+            <Text style={[styles.tabText, tab === "address" && styles.activeTabText]}>Endereço</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Content */}
         {tab === "personal" && (
-          <View className="mx-6 mt-6 space-y-6">
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Nome Completo</Text>
-              <TextInput
-                value={personalInfo.name}
-                onChangeText={(v) => handleChangePersonal("name", v)}
-                className="border border-gray-300 rounded px-3 py-2"
-                placeholder="Seu nome completo"
-              />
-            </View>
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
-              <TextInput
-                value={personalInfo.email}
-                onChangeText={(v) => handleChangePersonal("email", v)}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                className="border border-gray-300 rounded px-3 py-2"
-                placeholder="seu@email.com"
-              />
-            </View>
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Telefone</Text>
-              <TextInput
-                value={personalInfo.phone}
-                onChangeText={(v) => handleChangePersonal("phone", v)}
-                keyboardType="phone-pad"
-                placeholder="(00) 00000-0000"
-                className="border border-gray-300 rounded px-3 py-2"
-              />
-            </View>
-            <TouchableOpacity
-              onPress={handleSavePersonal}
-              className="bg-barber-gold rounded py-3 items-center"
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <View className="flex-row items-center">
-                  <Loader2 size={20} color="#000" className="mr-2" />
-                  <Text className="text-black font-semibold">Salvando...</Text>
-                </View>
-              ) : (
-                <Text className="text-black font-semibold">Salvar Alterações</Text>
-              )}
+          <View style={styles.formSection}>
+            {['name', 'email', 'phone'].map((field, idx) => (
+              <View key={idx} style={styles.formGroup}>
+                <Text style={styles.label}>{field === 'name' ? 'Nome Completo' : field === 'email' ? 'Email' : 'Telefone'}</Text>
+                <TextInput
+                  value={personalInfo[field as keyof typeof personalInfo]}
+                  onChangeText={(v) => handleChangePersonal(field as keyof typeof personalInfo, v)}
+                  style={styles.input}
+                  placeholder={field === 'email' ? 'seu@email.com' : ''}
+                />
+              </View>
+            ))}
+            <TouchableOpacity onPress={handleSavePersonal} style={styles.saveButton} disabled={isSaving}>
+              {isSaving ? <Text style={styles.saveText}>Salvando...</Text> : <Text style={styles.saveText}>Salvar Alterações</Text>}
             </TouchableOpacity>
           </View>
         )}
 
         {tab === "address" && (
-          <View className="mx-6 mt-6 space-y-6">
-            <View>
-              <Text className="text-sm font-medium text-gray-700 mb-1">Rua</Text>
-              <TextInput
-                value={address.street}
-                onChangeText={(v) => handleChangeAddress("street", v)}
-                className="border border-gray-300 rounded px-3 py-2"
-                placeholder="Rua"
-              />
-            </View>
-
-            <View className="flex-row space-x-4">
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Número</Text>
+          <View style={styles.formSection}>
+            {['street', 'number', 'zipCode', 'city', 'state'].map((field, idx) => (
+              <View key={idx} style={styles.formGroup}>
+                <Text style={styles.label}>{field.charAt(0).toUpperCase() + field.slice(1)}</Text>
                 <TextInput
-                  value={address.number}
-                  onChangeText={(v) => handleChangeAddress("number", v)}
-                  className="border border-gray-300 rounded px-3 py-2"
-                  placeholder="Número"
+                  value={address[field as keyof typeof address]}
+                  onChangeText={(v) => handleChangeAddress(field as keyof typeof address, v)}
+                  style={styles.input}
+                  placeholder={field}
                 />
               </View>
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-1">CEP</Text>
-                <TextInput
-                  value={address.zipCode}
-                  onChangeText={(v) => handleChangeAddress("zipCode", v)}
-                  className="border border-gray-300 rounded px-3 py-2"
-                  placeholder="00000-000"
-                />
-              </View>
-            </View>
-
-            <View className="flex-row space-x-4">
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Cidade</Text>
-                <TextInput
-                  value={address.city}
-                  onChangeText={(v) => handleChangeAddress("city", v)}
-                  className="border border-gray-300 rounded px-3 py-2"
-                  placeholder="Cidade"
-                />
-              </View>
-              <View className="flex-1">
-                <Text className="text-sm font-medium text-gray-700 mb-1">Estado</Text>
-                <TextInput
-                  value={address.state}
-                  onChangeText={(v) => handleChangeAddress("state", v)}
-                  className="border border-gray-300 rounded px-3 py-2"
-                  placeholder="Estado"
-                />
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={handleSaveAddress}
-              className="bg-barber-gold rounded py-3 items-center"
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <View className="flex-row items-center">
-                  <Loader2 size={20} color="#000" className="mr-2" />
-                  <Text className="text-black font-semibold">Salvando...</Text>
-                </View>
-              ) : (
-                <Text className="text-black font-semibold">Salvar Alterações</Text>
-              )}
+            ))}
+            <TouchableOpacity onPress={handleSaveAddress} style={styles.saveButton} disabled={isSaving}>
+              {isSaving ? <Text style={styles.saveText}>Salvando...</Text> : <Text style={styles.saveText}>Salvar Alterações</Text>}
             </TouchableOpacity>
           </View>
         )}
@@ -279,3 +159,24 @@ export default function Profile() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "white" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  scrollContent: { paddingBottom: 60 },
+  profileHeader: { alignItems: "center", backgroundColor: "#1f2937", padding: 32 },
+  profileIcon: { width: 96, height: 96, borderRadius: 48, backgroundColor: "#facc15", alignItems: "center", justifyContent: "center", marginBottom: 12 },
+  name: { fontSize: 20, fontWeight: "600", color: "#facc15" },
+  email: { color: "#d1d5db" },
+  tabContainer: { flexDirection: "row", marginTop: 24, marginHorizontal: 16, borderBottomWidth: 1, borderColor: "#d1d5db" },
+  tab: { flex: 1, paddingVertical: 12, alignItems: "center", borderBottomWidth: 2, borderColor: "transparent" },
+  activeTab: { borderColor: "#facc15" },
+  tabText: { fontWeight: "600", color: "#6b7280" },
+  activeTabText: { color: "#facc15" },
+  formSection: { marginHorizontal: 24, marginTop: 24 },
+  formGroup: { marginBottom: 16 },
+  label: { fontSize: 14, fontWeight: "500", color: "#374151", marginBottom: 4 },
+  input: { borderWidth: 1, borderColor: "#d1d5db", borderRadius: 8, padding: 12, backgroundColor: "white" },
+  saveButton: { backgroundColor: "#facc15", borderRadius: 8, paddingVertical: 12, alignItems: "center", marginTop: 16 },
+  saveText: { color: "#000", fontWeight: "600" },
+});

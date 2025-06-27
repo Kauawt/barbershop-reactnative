@@ -17,7 +17,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const auth = useAuth();
 
-  // Defina aqui as rotas que NÃO precisam de autenticação
   const publicRoutes = ["register", "cadastro"];
 
   useEffect(() => {
@@ -34,20 +33,17 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
           uid = await SecureStore.getItemAsync("uid");
         }
 
-        // Autenticação baseada apenas na presença do token e uid
         const isAuth = !!(token && uid);
         setIsAuthenticated(isAuth);
 
-        const currentRoute = segments[0] ?? ""; // pega a primeira parte da rota
+        const currentRoute = segments[0] ?? "";
         const isPublicPage = publicRoutes.includes(currentRoute.toLowerCase());
 
         if (!isAuth && !isPublicPage) {
-          // Usuário não autenticado tentando acessar rota protegida
           router.replace("/login");
         }
 
         if (isAuth && isPublicPage) {
-          // Usuário autenticado tentando acessar página pública (login, cadastro)
           router.replace("/");
         }
       } catch (error) {
