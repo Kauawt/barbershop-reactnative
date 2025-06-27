@@ -1,13 +1,13 @@
-// src/components/inputs/CustomMaskInput.tsx
 import React from 'react';
 import MaskInput, { MaskInputProps } from 'react-native-mask-input';
+import { StyleSheet } from 'react-native';
 
 const MASKS = {
   cpf: [/\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '.', /\d/, /\d/, /\d/, '-', /\d/, /\d/],
   date: [/\d/, /\d/, '/', /\d/, /\d/, '/', /\d/, /\d/, /\d/, /\d/],
   cep: [/\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/],
   phone: ['(', /\d/, /\d/, ')', ' ', /\d/, /\d/, /\d/, /\d/, /\d/, '-', /\d/, /\d/, /\d/, /\d/],
-  } as const;
+} as const;
 
 interface CustomMaskInputProps extends Omit<MaskInputProps, 'mask'> {
   placeholder: string;
@@ -15,20 +15,20 @@ interface CustomMaskInputProps extends Omit<MaskInputProps, 'mask'> {
   customMask?: (string | RegExp)[];
 }
 
-const CustomMaskInput: React.FC<CustomMaskInputProps> = ({ 
-  placeholder, 
-  value, 
-  onChangeText, 
+const CustomMaskInput: React.FC<CustomMaskInputProps> = ({
+  placeholder,
+  value,
+  onChangeText,
   maskType,
   customMask,
   keyboardType,
-  ...props 
+  ...props
 }) => {
   const mask = maskType ? [...MASKS[maskType]] : customMask;
 
   return (
     <MaskInput
-      className="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 mb-4 text-gray-800 w-full max-w-xs mx-auto"
+      style={styles.input}
       placeholder={placeholder}
       placeholderTextColor="#9CA3AF"
       value={value}
@@ -39,5 +39,21 @@ const CustomMaskInput: React.FC<CustomMaskInputProps> = ({
     />
   );
 };
+
+const styles = StyleSheet.create({
+  input: {
+    backgroundColor: '#F3F4F6', // bg-gray-100
+    borderWidth: 1,
+    borderColor: '#D1D5DB', // border-gray-300
+    borderRadius: 12, // rounded-lg
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    marginBottom: 16, // mb-4
+    color: '#1F2937', // text-gray-800
+    width: '100%',
+    maxWidth: 360,
+    alignSelf: 'center',
+  },
+});
 
 export default CustomMaskInput;

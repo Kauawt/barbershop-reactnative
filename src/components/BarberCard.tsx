@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
-import { Barber } from "../types"; 
+import { Barber } from "../types";
 import { Star } from "lucide-react-native";
 
 interface BarberCardProps {
@@ -26,8 +26,8 @@ const BarberCard = ({ barber }: BarberCardProps) => {
         {barber.specialties && (
           <View className="flex flex-wrap gap-2">
             {barber.specialties.map((specialty, index) => (
-              <View 
-                key={index} 
+              <View
+                key={index}
                 className="bg-barber-accent/10 text-barber-accent px-2 py-1 rounded-full"
               >
                 <Text className="text-xs">{specialty}</Text>
@@ -36,7 +36,7 @@ const BarberCard = ({ barber }: BarberCardProps) => {
           </View>
         )}
       </View>
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={() => console.log(`Agendando com ${barber.name}`)}
         className="bg-barber-dark text-white p-3 rounded-lg"
       >

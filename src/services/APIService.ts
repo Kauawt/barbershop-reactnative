@@ -3,9 +3,13 @@ import axios from 'axios';
 import { useAuth } from '../context/auth'
 import { useState } from 'react';
 import * as SecureStore from 'expo-secure-store'
+import Constants from 'expo-constants'
+import { router } from 'expo-router';
+
+const API_URL = Constants.expoConfig?.extra?.apiUrl || 'http://192.168.15.16:5000/api'
 
 const api = axios.create({
-  baseURL: 'http:// 192.168.15.119:5000/api',
+  baseURL: API_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -13,22 +17,31 @@ const api = axios.create({
 });
 
 
-  const [token, setToken] = useState('')
-    async function getToken() {
-      const token = await SecureStore.getItemAsync('token')
-      if (token) setToken(token)
-    }
-
-// Interceptor para adicionar o token no header Authorization
+async function getToken(): Promise<string | null> {
+  return await SecureStore.getItemAsync('token');
+}
 api.interceptors.request.use(
   async (config) => {
-    getToken()
+    const token = await getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
+);
+
+// Trata respostas 401
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      console.warn("Token inválido ou ausente. Redirecionando para login...");
+      await SecureStore.deleteItemAsync('token');
+      router.replace('/login');
+    }
+    return Promise.reject(error);
+  }
 );
 
 // Serviço de Agendamento

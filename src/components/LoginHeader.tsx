@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from 'expo-router';
 import { Scissors } from "lucide-react-native";
 
@@ -7,18 +7,43 @@ const LoginHeader = () => {
   const router = useRouter();
 
   return (
-    <View className="bg-black py-4 px-4 w-full z-50">
-      <View className="flex-row justify-between items-center">
+    <View style={styles.headerContainer}>
+      <View style={styles.innerRow}>
         <TouchableOpacity
-          className="flex-row items-center"
+          style={styles.logoRow}
           onPress={() => router.replace('/')}
         >
-          <Scissors className="h-6 w-6 text-yellow-400" />
-          <Text className="text-xl font-bold ml-2 text-white">Inova Barbearia</Text>
+          <Scissors color="#FBBF24" size={24} />
+          <Text style={styles.logoText}>Inova Barbearia</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-export default LoginHeader; 
+const styles = StyleSheet.create({
+  headerContainer: {
+    backgroundColor: "black",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    width: "100%",
+    zIndex: 50,
+  },
+  innerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  logoText: {
+    color: "white",
+    fontSize: 20,
+    fontWeight: "700",
+    marginLeft: 8,
+  },
+});
+
+export default LoginHeader;
