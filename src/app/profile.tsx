@@ -4,14 +4,13 @@ import { useRouter } from "expo-router";
 import { User as UserIcon, Loader2 } from "lucide-react-native";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { getAuth } from 'firebase/auth';
-import app from '../services/firebase';
+import { useAuth } from '../context/auth'
 import APIService from "../services/APIService";
 
 export default function Profile() {
   const router = useRouter();
-  const auth = getAuth(app);
-  const [user, setUser] = useState(auth.currentUser);
+  const auth = useAuth();
+  const [user, setUser] = useState(auth.user);
   const [loading, setLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
 

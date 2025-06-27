@@ -3,37 +3,30 @@ import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
 import { useRouter } from 'expo-router';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ServiceCard from "../components/ServiceCard";
+import BarberCard from "../components/BarberCard";
 import APIService from "../services/APIService";
+import * as SecureStore from 'expo-secure-store'
 
 import { Scissors, Calendar, Award } from "lucide-react-native";
 
-interface Service {
-  id: string;
-  name: string;
-  price: number;
-  duration: number;
-  description: string;
-}
-
-interface Barber {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface FeatureCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-}
-
-const Index = () => {
+const Home = () => {
   const router = useRouter();
-
-  const [services, setServices] = useState<Service[]>([]);
-  const [barbers, setBarbers] = useState<Barber[]>([]);
+  
+  const [token, setToken] = useState('')
+  const [services, setServices] = useState([]);
+  const [barbers, setBarbers] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    async function getToken() {
+      const token = await SecureStore.getItemAsync('token')
+      if (token) setToken(token)
+    }
+
+    getToken()
+  }, [])
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -41,25 +34,18 @@ const Index = () => {
         const barbersData = await APIService.usuario.getAll();
 
         const adaptedServices = servicesData.data
-          .filter((srv: any) => srv.isActive)
-          .map((srv: any) => ({
+          .filter((srv: { isActive: any; }) => srv.isActive)
+          .map((srv: { _id: any; name: any; price: any; duracao: any; image: any; description: any; }) => ({
             id: srv._id,
             name: srv.name,
             price: srv.price,
             duration: srv.duracao,
+            image: srv.image,
             description: srv.description ?? 'Descrição não disponível',
           }));
 
-        const adaptedBarbers = barbersData.data
-          .filter((barber: any) => barber.role === 'barbeiro')
-          .map((barber: any) => ({
-            id: barber._id,
-            name: barber.name,
-            email: barber.email,
-          }));
-
         setServices(adaptedServices);
-        setBarbers(adaptedBarbers);
+        setBarbers(barbersData.data ?? []);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       } finally {
@@ -78,7 +64,7 @@ const Index = () => {
     );
   }
 
-  const featuredServices = services.slice(0, 4);
+  const featuredServices = services.slice(0, 3);
   const featuredBarbers = barbers.slice(0, 3);
 
   return (
@@ -119,7 +105,7 @@ const Index = () => {
         {/* Features Section */}
         <View className="w-full px-4 py-8">
           <Text className="text-center text-xl font-bold mb-8">
-            Por que escolher a Inova Barbearia?
+            Por que escolher a BarberAgendaPro?
           </Text>
           <View className="flex flex-col md:flex-row gap-6">
             <FeatureCard
@@ -153,16 +139,7 @@ const Index = () => {
           </View>
           <View className="flex flex-row flex-wrap justify-center gap-4">
             {featuredServices.map((service) => (
-              <View key={service.id} className="bg-white p-2 rounded-lg shadow-sm w-[22%] min-w-[180px] max-w-[220px]">
-                <Text className="text-sm font-semibold text-center">{service.name}</Text>
-                <Text className="text-gray-600 text-center text-xs">R$ {service.price.toFixed(2)}</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/agendamento")}
-                  className="bg-yellow-500 rounded px-2 py-1 w-20 mx-auto mt-1"
-                >
-                  <Text className="text-black font-semibold text-xs text-center">Agendar</Text>
-                </TouchableOpacity>
-              </View>
+              <ServiceCard key={service.id} service={service} />
             ))}
           </View>
         </View>
@@ -171,19 +148,16 @@ const Index = () => {
         <View className="bg-white px-4 py-8">
           <View className="items-center mb-6">
             <Text className="text-2xl font-bold text-center">Nossos Barbeiros</Text>
-        
+            <TouchableOpacity
+              onPress={() => router.replace("/barbers")}
+              className="border border-yellow-500 rounded-lg px-4 py-2 mt-4"
+            >
+              <Text className="text-yellow-500">Ver Todos</Text>
+            </TouchableOpacity>
           </View>
           <View className="flex flex-row flex-wrap justify-center gap-4">
             {featuredBarbers.map((barber) => (
-              <View key={barber.id} className="bg-gray-50 p-2 rounded-lg w-[22%] min-w-[180px] max-w-[220px]">
-                <Text className="text-sm font-semibold text-center mb-1">{barber.name}</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/agendamento")}
-                  className="bg-yellow-500 rounded px-2 py-1 w-20 mx-auto mt-1"
-                >
-                  <Text className="text-black font-semibold text-xs text-center">Agendar</Text>
-                </TouchableOpacity>
-              </View>
+              <BarberCard key={barber.id} barber={barber} />
             ))}
           </View>
         </View>
@@ -206,16 +180,13 @@ const Index = () => {
           </View>
         </View>
 
-        {/* Espaço em branco entre o conteúdo e o footer */}
-        <View className="h-8 bg-white" />
-
         <Footer />
       </ScrollView>
     </View>
   );
 };
 
-const FeatureCard = ({ title, description, icon }: FeatureCardProps) => (
+const FeatureCard = ({ title, description, icon }) => (
   <View className="items-center text-center p-4 flex-1">
     <View className="w-14 h-14 bg-yellow-100 rounded-full items-center justify-center mb-3">
       {icon}
@@ -225,4 +196,4 @@ const FeatureCard = ({ title, description, icon }: FeatureCardProps) => (
   </View>
 );
 
-export default Index;
+export default Home;

@@ -4,19 +4,19 @@ import { useRouter } from 'expo-router';
 import { Scissors, Menu, X, User, LogOut } from "lucide-react-native";
 import { getAuth } from "firebase/auth";
 import { signOut } from "firebase/auth";
-import firebaseApp from '../services/firebase';
 import APIService from "../services/APIService";
 import * as SecureStore from "expo-secure-store";
+import { useAuth } from '../context/auth'
 
 const Header = () => {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { width } = useWindowDimensions();
-  const auth = getAuth(firebaseApp);
+  const auth = useAuth();
   const [userRole, setUserRole] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
-  const currentUser = auth.currentUser;
+  const currentUser = auth.user;
   const userName = currentUser?.displayName || currentUser?.email || "Perfil";
 
   const isLargeScreen = width >= 768;

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
 import { useRouter, useSegments } from "expo-router";
 import { getAuth } from "firebase/auth";
-import app from "../services/firebase";
+import { useAuth } from '../context/auth'
+
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
@@ -15,12 +16,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const segments = useSegments();
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const auth = getAuth(app);
+  const auth = useAuth()
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const user = auth.currentUser;
+        const user = auth.user;
         let token = null;
         let uid = null;
 
@@ -39,7 +40,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         if (!isAuth) {
           const isPublicPage = segments[0] === "login" || segments[0] === "cadastro";
           if (!isPublicPage) {
-            router.replace("/login");
+            router.replace("/Home");
           }
         }
       } catch (error) {

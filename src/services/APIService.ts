@@ -1,29 +1,28 @@
 // src/services/APIService.ts
 import axios from 'axios';
-import { getAuth } from 'firebase/auth';
+import { useAuth } from '../context/auth'
+import { useState } from 'react';
+import * as SecureStore from 'expo-secure-store'
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'http:// 192.168.15.119:5000/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Função para pegar o token atual do usuário logado via Firebase
-async function getFirebaseToken() {
-  const auth = getAuth();
-  const user = auth.currentUser;
-  if (user) {
-    return await user.getIdToken(/* forceRefresh= */ false);
-  }
-  return null;
-}
+
+  const [token, setToken] = useState('')
+    async function getToken() {
+      const token = await SecureStore.getItemAsync('token')
+      if (token) setToken(token)
+    }
 
 // Interceptor para adicionar o token no header Authorization
 api.interceptors.request.use(
   async (config) => {
-    const token = await getFirebaseToken();
+    getToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

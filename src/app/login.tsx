@@ -1,62 +1,17 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Alert, ScrollView, ActivityIndicator, Platform } from "react-native";
 import { useRouter } from "expo-router";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import app from "../services/firebase";
+import { useAuth } from '../context/auth'
 import LoginHeader from "../components/LoginHeader";
 import Footer from "../components/Footer";
 import { Eye, EyeOff } from "lucide-react-native";
-import * as SecureStore from "expo-secure-store";
 
 export default function Login() {
   const router = useRouter();
-  const auth = getAuth(app);
-  const [email, setEmail] = useState("");
-  const [senha, setSenha] = useState("");
+  const { user, handleLogin, setUser } = useAuth()
+  console.log('Auth context:', user, setUser, handleLogin)
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  const handleLogin = async () => {
-    if (!email || !senha) {
-      Alert.alert("Erro", "Por favor, preencha todos os campos");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      const user = userCredential.user;
-
-      if (user) {
-
-        const token = await user.getIdToken();
-        
-        if (Platform.OS === "web") {
-          localStorage.setItem("token", token);
-          localStorage.setItem("uid", user.uid);
-        } else {
-          await SecureStore.setItemAsync("token", token);
-          await SecureStore.setItemAsync("uid", user.uid);
-        }
-
-        router.replace("/");
-      }
-    } catch (error: any) {
-      console.error("Erro no login:", error);
-      let mensagem = "Erro ao fazer login. Tente novamente.";
-
-      if (error.code === "auth/invalid-credential") {
-        mensagem = "Email ou senha inválidos";
-      } else if (error.code === "auth/too-many-requests") {
-        mensagem = "Muitas tentativas. Tente novamente mais tarde";
-      }
-
-      Alert.alert("Erro", mensagem);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <View className="flex-1 bg-white">
@@ -72,8 +27,7 @@ export default function Login() {
                 <TextInput
                   className="border border-gray-300 rounded-lg p-3"
                   placeholder="Seu email"
-                  value={email}
-                  onChangeText={setEmail}
+                  onChangeText={text => setUser({ ...user, email: text })}
                   keyboardType="email-address"
                   autoCapitalize="none"
                 />
@@ -85,8 +39,7 @@ export default function Login() {
                   <TextInput
                     className="border border-gray-300 rounded-lg p-3 pr-10"
                     placeholder="Sua senha"
-                    value={senha}
-                    onChangeText={setSenha}
+                    onChangeText={text => setUser({ ...user, password: text })}
                     secureTextEntry={!showPassword}
                   />
                   <TouchableOpacity

@@ -1,4 +1,4 @@
-import { Slot, useSegments } from "expo-router";
+/* import { Slot, useSegments } from "expo-router";
 import ProtectedRoute from "../components/ProtectedRoute";
 import '../styles/global.css';
 
@@ -15,4 +15,22 @@ export default function Layout() {
       <Slot />
     </ProtectedRoute>
   );
+} */
+
+import { Slot, useSegments } from "expo-router"
+import { PaperProvider } from "react-native-paper"
+import { AuthProvider } from "../context/auth"
+import ProtectedRoute from "../components/ProtectedRoute";
+
+export default function Layout() {
+
+  return (
+    <PaperProvider>
+      <AuthProvider>
+        <ProtectedRoute>
+          <Slot />
+        </ProtectedRoute>
+      </AuthProvider>
+    </PaperProvider>
+  )
 }

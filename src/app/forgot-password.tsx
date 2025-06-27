@@ -2,14 +2,15 @@ import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useState } from 'react';
 import { Link } from 'expo-router';
 import CustomInput from '../components/inputs/CustomInput';
-import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
-import app from "../services/firebase";
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { useAuth } from '../context/auth'
+import * as SecureStore from "expo-secure-store";
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const auth = getAuth(app);
+  const auth = useAuth();
 
   const handleResetPassword = async () => {
     if (!email) {

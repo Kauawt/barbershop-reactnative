@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { View, Text, TouchableOpacity, Alert, ScrollView, Platform, ActivityIndicator } from "react-native";
 import { useRouter } from 'expo-router';
 import Header from "../components/Header";
@@ -7,8 +7,8 @@ import APIService from "../services/APIService";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as SecureStore from 'expo-secure-store';
 import { Scissors, Calendar } from 'lucide-react-native';
-import { getAuth } from "firebase/auth";
-import app from "../services/firebase";
+import {app} from "../services/firebase";
+import { useAuth } from '../context/auth'
 
 interface Service {
   id: string;
@@ -58,7 +58,7 @@ const WebDatePicker: React.FC<WebDatePickerProps> = ({ value, onChange, minimumD
 
 export default function Agendamento() {
   const router = useRouter();
-  const auth = getAuth(app);
+  const auth = useAuth()
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -142,7 +142,7 @@ export default function Agendamento() {
     setIsSubmitting(true);
 
     try {
-      const user = auth.currentUser;
+      const user = auth.user;
       if (!user) {
         throw new Error("Usuário não autenticado");
       }
