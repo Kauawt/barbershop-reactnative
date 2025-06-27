@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Image, ScrollView } from "react-native";
+import { View, Text, TouchableOpacity, Image, ScrollView, StyleSheet } from "react-native";
 import { useRouter } from 'expo-router';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -72,8 +72,8 @@ const Index = () => {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center bg-white">
-        <Text className="text-lg text-gray-700">Carregando...</Text>
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Carregando...</Text>
       </View>
     );
   }
@@ -82,133 +82,102 @@ const Index = () => {
   const featuredBarbers = barbers.slice(0, 3);
 
   return (
-    <View className="flex-1 bg-white">
+    <View style={styles.container}>
       <Header />
-      <ScrollView className="flex-1">
-        {/* Hero Section */}
-        <View className="relative w-full">
+      <ScrollView>
+        <View style={styles.heroSection}>
           <Image
             source={require('../assets/capa.jpg')}
-            style={{ width: '100%', height: 250 }}
+            style={styles.heroImage}
             resizeMode="cover"
           />
-          <View className="absolute inset-0 bg-black/30 flex items-center justify-center px-4">
-            <Text className="text-3xl font-bold text-white text-center">
-              Seu Estilo, Nossa Especialidade
-            </Text>
-            <Text className="text-lg mt-2 text-white text-center">
+          <View style={styles.heroOverlay}>
+            <Text style={styles.heroTitle}>Seu Estilo, Nossa Especialidade</Text>
+            <Text style={styles.heroSubtitle}>
               Agende seu horário em uma das melhores barbearias, com os melhores profissionais.
             </Text>
-            <View className="flex-row justify-center mt-4 space-x-4">
-              <TouchableOpacity
-                onPress={() => router.replace("/agendamento")}
-                className="bg-yellow-500 rounded-lg px-6 py-2 w-40"
-              >
-                <Text className="text-black font-semibold text-base text-center">Agendar Agora</Text>
+            <View style={styles.heroButtons}>
+              <TouchableOpacity onPress={() => router.replace("/agendamento")}
+                style={styles.primaryButton}>
+                <Text style={styles.primaryButtonText}>Agendar Agora</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => router.replace("/services")}
-                className="border-2 border-white rounded-lg px-6 py-2"
-              >
-                <Text className="text-white text-base text-center">Ver Serviços</Text>
+              <TouchableOpacity onPress={() => router.replace("/services")}
+                style={styles.secondaryButton}>
+                <Text style={styles.secondaryButtonText}>Ver Serviços</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
 
-        {/* Features Section */}
-        <View className="w-full px-4 py-8">
-          <Text className="text-center text-xl font-bold mb-8">
-            Por que escolher a Inova Barbearia?
-          </Text>
-          <View className="flex flex-col md:flex-row gap-6">
+        <View style={styles.featuresSection}>
+          <Text style={styles.sectionTitle}>Por que escolher a Inova Barbearia?</Text>
+          <View style={styles.featuresContainer}>
             <FeatureCard
               title="Profissionais Qualificados"
               description="Nossa equipe é formada por barbeiros experientes e certificados."
-              icon={<Scissors size={32} color="#facc15" />}
-            />
+              icon={<Scissors size={32} color="#facc15" />} />
             <FeatureCard
               title="Agendamento Fácil"
               description="Agende seu horário online em poucos passos."
-              icon={<Calendar size={32} color="#facc15" />}
-            />
+              icon={<Calendar size={32} color="#facc15" />} />
             <FeatureCard
               title="Experiência Premium"
               description="Ambiente sofisticado e atendimento personalizado."
-              icon={<Award size={32} color="#facc15" />}
-            />
+              icon={<Award size={32} color="#facc15" />} />
           </View>
         </View>
 
-        {/* Services Section */}
-        <View className="bg-gray-50 px-4 py-8">
-          <View className="items-center mb-6">
-            <Text className="text-2xl font-bold text-center">Nossos Serviços</Text>
-            <TouchableOpacity
-              onPress={() => router.replace("/services")}
-              className="border border-yellow-500 rounded-lg px-4 py-2 mt-4"
-            >
-              <Text className="text-yellow-500">Ver Todos</Text>
+        <View style={styles.servicesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Nossos Serviços</Text>
+            <TouchableOpacity onPress={() => router.replace("/services")} style={styles.outlineButton}>
+              <Text style={styles.outlineButtonText}>Ver Todos</Text>
             </TouchableOpacity>
           </View>
-          <View className="flex flex-row flex-wrap justify-center gap-4">
+          <View style={styles.cardGrid}>
             {featuredServices.map((service) => (
-              <View key={service.id} className="bg-white p-2 rounded-lg shadow-sm w-[22%] min-w-[180px] max-w-[220px]">
-                <Text className="text-sm font-semibold text-center">{service.name}</Text>
-                <Text className="text-gray-600 text-center text-xs">R$ {service.price.toFixed(2)}</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/agendamento")}
-                  className="bg-yellow-500 rounded px-2 py-1 w-20 mx-auto mt-1"
-                >
-                  <Text className="text-black font-semibold text-xs text-center">Agendar</Text>
+              <View key={service.id} style={styles.card}>
+                <Text style={styles.cardTitle}>{service.name}</Text>
+                <Text style={styles.cardSubtitle}>R$ {service.price.toFixed(2)}</Text>
+                <TouchableOpacity onPress={() => router.push("/agendamento")}
+                  style={styles.cardButton}>
+                  <Text style={styles.cardButtonText}>Agendar</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Barbers Section */}
-        <View className="bg-white px-4 py-8">
-          <View className="items-center mb-6">
-            <Text className="text-2xl font-bold text-center">Nossos Barbeiros</Text>
-        
+        <View style={styles.barbersSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Nossos Barbeiros</Text>
           </View>
-          <View className="flex flex-row flex-wrap justify-center gap-4">
+          <View style={styles.cardGrid}>
             {featuredBarbers.map((barber) => (
-              <View key={barber.id} className="bg-gray-50 p-2 rounded-lg w-[22%] min-w-[180px] max-w-[220px]">
-                <Text className="text-sm font-semibold text-center mb-1">{barber.name}</Text>
-                <TouchableOpacity
-                  onPress={() => router.push("/agendamento")}
-                  className="bg-yellow-500 rounded px-2 py-1 w-20 mx-auto mt-1"
-                >
-                  <Text className="text-black font-semibold text-xs text-center">Agendar</Text>
+              <View key={barber.id} style={styles.card}>
+                <Text style={styles.cardTitle}>{barber.name}</Text>
+                <TouchableOpacity onPress={() => router.push("/agendamento")}
+                  style={styles.cardButton}>
+                  <Text style={styles.cardButtonText}>Agendar</Text>
                 </TouchableOpacity>
               </View>
             ))}
           </View>
         </View>
 
-        {/* Call to Action */}
-        <View className="w-full bg-black py-10 px-4">
-          <View className="max-w-2xl mx-auto text-center">
-            <Text className="text-3xl font-bold text-yellow-500 mb-4">
-              Pronto para mudar seu visual?
-            </Text>
-            <Text className="text-lg text-gray-300 mb-6">
+        <View style={styles.ctaSection}>
+          <View style={styles.ctaContent}>
+            <Text style={styles.ctaTitle}>Pronto para mudar seu visual?</Text>
+            <Text style={styles.ctaText}>
               Não espere mais para ter a experiência de uma barbearia premium com os melhores profissionais. Agende seu horário agora!
             </Text>
-            <TouchableOpacity
-              onPress={() => router.replace("/agendamento")}
-              className="bg-yellow-500 rounded-lg px-6 py-2 w-40 mx-auto"
-            >
-              <Text className="text-black font-semibold text-base text-center">Agendar Agora</Text>
+            <TouchableOpacity onPress={() => router.replace("/agendamento")} style={styles.primaryButton}>
+              <Text style={styles.primaryButtonText}>Agendar Agora</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {/* Espaço em branco entre o conteúdo e o footer */}
-        <View className="h-8 bg-white" />
-
+        <View style={{ height: 32, backgroundColor: "white" }} />
         <Footer />
       </ScrollView>
     </View>
@@ -216,13 +185,53 @@ const Index = () => {
 };
 
 const FeatureCard = ({ title, description, icon }: FeatureCardProps) => (
-  <View className="items-center text-center p-4 flex-1">
-    <View className="w-14 h-14 bg-yellow-100 rounded-full items-center justify-center mb-3">
-      {icon}
-    </View>
-    <Text className="text-lg font-medium mb-1">{title}</Text>
-    <Text className="text-gray-600 text-sm text-center">{description}</Text>
+  <View style={styles.featureCard}>
+    <View style={styles.featureIcon}>{icon}</View>
+    <Text style={styles.featureTitle}>{title}</Text>
+    <Text style={styles.featureText}>{description}</Text>
   </View>
 );
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: 'white' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' },
+  loadingText: { fontSize: 18, color: '#4B5563' },
+  heroSection: { position: 'relative', width: '100%' },
+  heroImage: { width: '100%', height: 250 },
+  heroOverlay: {
+    position: 'absolute', inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16
+  },
+  heroTitle: { fontSize: 24, fontWeight: 'bold', color: 'white', textAlign: 'center' },
+  heroSubtitle: { fontSize: 16, color: 'white', marginTop: 8, textAlign: 'center' },
+  heroButtons: { flexDirection: 'row', justifyContent: 'center', marginTop: 16, gap: 8 },
+  primaryButton: { backgroundColor: '#FBBF24', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 24 },
+  primaryButtonText: { color: 'black', fontWeight: '600', fontSize: 16, textAlign: 'center' },
+  secondaryButton: { borderWidth: 2, borderColor: 'white', borderRadius: 8, paddingVertical: 8, paddingHorizontal: 24 },
+  secondaryButtonText: { color: 'white', fontSize: 16, textAlign: 'center' },
+  featuresSection: { paddingHorizontal: 16, paddingVertical: 32 },
+  sectionTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
+  featuresContainer: { flexDirection: 'column', gap: 24 },
+  featureCard: { alignItems: 'center', padding: 16, flex: 1 },
+  featureIcon: { width: 56, height: 56, backgroundColor: '#FEF3C7', borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  featureTitle: { fontSize: 18, fontWeight: '600', marginBottom: 4, textAlign: 'center' },
+  featureText: { fontSize: 14, color: '#4B5563', textAlign: 'center' },
+  servicesSection: { backgroundColor: '#F9FAFB', paddingHorizontal: 16, paddingVertical: 32 },
+  barbersSection: { backgroundColor: 'white', paddingHorizontal: 16, paddingVertical: 32 },
+  sectionHeader: { alignItems: 'center', marginBottom: 24 },
+  outlineButton: { borderWidth: 1, borderColor: '#FBBF24', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8, marginTop: 12 },
+  outlineButtonText: { color: '#FBBF24', fontSize: 14 },
+  cardGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 16 },
+  card: { backgroundColor: 'white', padding: 8, borderRadius: 8, width: '45%', maxWidth: 220, alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 4, elevation: 2 },
+  cardTitle: { fontSize: 14, fontWeight: '600', textAlign: 'center' },
+  cardSubtitle: { fontSize: 12, color: '#6B7280', textAlign: 'center' },
+  cardButton: { backgroundColor: '#FBBF24', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, marginTop: 8 },
+  cardButtonText: { color: 'black', fontWeight: '600', fontSize: 12, textAlign: 'center' },
+  ctaSection: { backgroundColor: 'black', paddingVertical: 40, paddingHorizontal: 16 },
+  ctaContent: { maxWidth: 600, alignSelf: 'center', textAlign: 'center' },
+  ctaTitle: { fontSize: 24, fontWeight: 'bold', color: '#FBBF24', marginBottom: 16, textAlign: 'center' },
+  ctaText: { fontSize: 16, color: '#D1D5DB', marginBottom: 24, textAlign: 'center' },
+});
 
 export default Index;
