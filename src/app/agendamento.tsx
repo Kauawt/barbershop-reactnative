@@ -1,5 +1,7 @@
-import React, { useState, useEffect, use } from "react";
-import { View, Text, TouchableOpacity, Alert, ScrollView, Platform, ActivityIndicator } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View, Text, TouchableOpacity, Alert, ScrollView, Platform, ActivityIndicator, StyleSheet
+} from "react-native";
 import { useRouter } from 'expo-router';
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -7,8 +9,7 @@ import APIService from "../services/APIService";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import * as SecureStore from 'expo-secure-store';
 import { Scissors, Calendar } from 'lucide-react-native';
-import {app} from "../services/firebase";
-import { useAuth } from '../context/auth'
+import { useAuth } from '../context/auth';
 
 interface Service {
   id: string;
@@ -46,7 +47,7 @@ const WebDatePicker: React.FC<WebDatePickerProps> = ({ value, onChange, minimumD
         borderRadius: 8,
         border: '1px solid #ccc',
         width: '100%',
-        maxWidth: '300px',
+        maxWidth: 300,
         marginBottom: 16,
         marginLeft: 'auto',
         marginRight: 'auto',
@@ -58,7 +59,7 @@ const WebDatePicker: React.FC<WebDatePickerProps> = ({ value, onChange, minimumD
 
 export default function Agendamento() {
   const router = useRouter();
-  const auth = useAuth()
+  const auth = useAuth();
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<Service[]>([]);
   const [barbers, setBarbers] = useState<Barber[]>([]);
@@ -68,6 +69,7 @@ export default function Agendamento() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
   const [redirectCountdown, setRedirectCountdown] = useState<number | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const stepTitles = [
     "Selecione um Serviço",
@@ -87,9 +89,6 @@ export default function Agendamento() {
         APIService.usuario.getBarbeiros()
       ]);
 
-      console.log('Dados dos serviços:', servicesData);
-      console.log('Dados dos barbeiros:', barbersData);
-
       const adaptedServices = servicesData.data
         .filter((srv: any) => srv.isActive)
         .map((srv: any) => ({
@@ -101,7 +100,6 @@ export default function Agendamento() {
           description: srv.description || "Descrição não disponível"
         }));
 
-      console.log('Serviços adaptados:', adaptedServices);
       setServices(adaptedServices);
       setBarbers(barbersData.data || []);
     } catch (error) {
@@ -113,13 +111,11 @@ export default function Agendamento() {
   };
 
   const handleServiceSelect = (service: Service) => {
-    console.log('Serviço selecionado:', service);
     setSelectedService(service);
     setStep(2);
   };
 
   const handleBarberSelect = (barber: Barber) => {
-    console.log('Barbeiro selecionado:', barber);
     setSelectedBarber(barber);
     setStep(3);
   };
@@ -143,9 +139,7 @@ export default function Agendamento() {
 
     try {
       const user = auth.user;
-      if (!user) {
-        throw new Error("Usuário não autenticado");
-      }
+      if (!user) throw new Error("Usuário não autenticado");
 
       const agendamentoData = {
         cliente: user.uid,
@@ -159,7 +153,7 @@ export default function Agendamento() {
       };
 
       await APIService.agendamento.create(agendamentoData);
-      
+
       const confirmationMessage = `Serviço: ${selectedService.name}\nBarbeiro: ${selectedBarber.name}\nData: ${selectedDate.toLocaleDateString('pt-BR')}\nValor: R$ ${selectedService.price.toFixed(2)}`;
 
       if (Platform.OS === 'web') {
@@ -182,55 +176,50 @@ export default function Agendamento() {
 
   if (loading) {
     return (
-      <View className="flex-1 justify-center items-center">
+      <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#b58900" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-white relative">
+    <View style={styles.container}>
       <Header />
       <ScrollView
-        className="flex-1 p-4 md:p-6"
-        contentContainerStyle={{
-          paddingBottom: 100,
-          maxWidth: 800,
-          marginHorizontal: 'auto',
-          width: '100%'
-        }}
+        contentContainerStyle={styles.scrollContainer}
       >
         {redirectCountdown !== null && (
-          <View className="bg-green-100 p-2 mb-4 rounded mx-auto max-w-md">
-            <Text className="text-green-800 text-center">
+          <View style={styles.redirectContainer}>
+            <Text style={styles.redirectText}>
               Redirecionando para a página inicial em {redirectCountdown} segundos...
             </Text>
           </View>
         )}
 
-        <View className="flex flex-row justify-around mb-6 mx-auto max-w-2xl w-full">
+        <View style={styles.stepsContainer}>
           {stepTitles.map((title, index) => {
             const isCurrent = step === index + 1;
             const isCompleted = step > index + 1;
 
             return (
-              <View key={index} className="flex items-center mx-1" style={{ minWidth: 70 }}>
-                <View className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                  isCurrent ? 'bg-black' :
-                  isCompleted ? 'bg-yellow-500 border-yellow-500' :
-                  'border-2 border-gray-300'
-                }`}>
-                  <Text className={`text-lg font-bold ${
-                    isCurrent ? 'text-white' :
-                    isCompleted ? 'text-white' :
-                    'text-gray-400'
-                  }`}>
+              <View key={index} style={styles.stepItem}>
+                <View style={[
+                  styles.stepCircle,
+                  isCurrent ? styles.stepCircleCurrent :
+                    isCompleted ? styles.stepCircleCompleted : styles.stepCirclePending
+                ]}>
+                  <Text style={[
+                    styles.stepNumber,
+                    isCurrent ? styles.stepNumberCurrent :
+                      isCompleted ? styles.stepNumberCompleted : styles.stepNumberPending
+                  ]}>
                     {index + 1}
                   </Text>
                 </View>
-                <Text className={`text-xs md:text-sm text-center mt-2 ${
-                  isCurrent ? 'text-black font-bold' : 'text-gray-500'
-                }`}>
+                <Text style={[
+                  styles.stepTitle,
+                  isCurrent ? styles.stepTitleCurrent : styles.stepTitlePending
+                ]}>
                   {title}
                 </Text>
               </View>
@@ -238,37 +227,34 @@ export default function Agendamento() {
           })}
         </View>
 
-        <View className="bg-white rounded-lg shadow-sm p-6 mx-auto w-full max-w-2xl mb-8">
-          <Text className="text-2xl font-bold text-gray-800 text-center mb-6">
-            {stepTitles[step - 1]}
-          </Text>
+        <View style={styles.stepContent}>
+          <Text style={styles.stepHeader}>{stepTitles[step - 1]}</Text>
 
           {step === 1 && (
             <>
-              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-                Selecione um Serviço:
-              </Text>
-              <View className="flex flex-row flex-wrap justify-center gap-3 mb-6">
+              <Text style={styles.sectionTitle}>Selecione um Serviço:</Text>
+              <View style={styles.optionsContainer}>
                 {services.map(service => {
                   const isSelected = selectedService?.id === service.id;
                   return (
                     <TouchableOpacity
                       key={service.id}
-                      className={`rounded-lg p-4 w-28 items-center ${
-                        isSelected ?
-                        'bg-yellow-500 shadow-md' :
-                        'bg-gray-100 hover:bg-gray-200'
-                      } transition-colors`}
+                      style={[
+                        styles.optionBox,
+                        isSelected ? styles.optionBoxSelected : styles.optionBoxDefault
+                      ]}
                       onPress={() => handleServiceSelect(service)}
                     >
-                      <Text className={`text-center font-medium ${
-                        isSelected ? 'text-white' : 'text-gray-700'
-                      }`}>
+                      <Text style={[
+                        styles.optionText,
+                        isSelected ? styles.optionTextSelected : styles.optionTextDefault
+                      ]}>
                         {service.name}
                       </Text>
-                      <Text className={`text-center text-sm mt-1 ${
-                        isSelected ? 'text-white' : 'text-gray-500'
-                      }`}>
+                      <Text style={[
+                        styles.optionSubText,
+                        isSelected ? styles.optionSubTextSelected : styles.optionSubTextDefault
+                      ]}>
                         R$ {service.price.toFixed(2)}
                       </Text>
                     </TouchableOpacity>
@@ -280,25 +266,23 @@ export default function Agendamento() {
 
           {step === 2 && (
             <>
-              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-                Escolha o Barbeiro:
-              </Text>
-              <View className="flex flex-row flex-wrap justify-center gap-3 mb-6">
+              <Text style={styles.sectionTitle}>Escolha o Barbeiro:</Text>
+              <View style={styles.optionsContainer}>
                 {barbers.map(barber => {
                   const isSelected = selectedBarber?._id === barber._id;
                   return (
                     <TouchableOpacity
                       key={barber._id}
-                      className={`rounded-lg p-4 w-28 items-center ${
-                        isSelected ?
-                        'bg-yellow-500 shadow-md' :
-                        'bg-gray-100 hover:bg-gray-200'
-                      } transition-colors`}
+                      style={[
+                        styles.optionBox,
+                        isSelected ? styles.optionBoxSelected : styles.optionBoxDefault
+                      ]}
                       onPress={() => handleBarberSelect(barber)}
                     >
-                      <Text className={`text-center font-medium ${
-                        isSelected ? 'text-white' : 'text-gray-700'
-                      }`}>
+                      <Text style={[
+                        styles.optionText,
+                        isSelected ? styles.optionTextSelected : styles.optionTextDefault
+                      ]}>
                         {barber.name}
                       </Text>
                     </TouchableOpacity>
@@ -310,9 +294,7 @@ export default function Agendamento() {
 
           {step === 3 && (
             <>
-              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-                Selecione uma Data:
-              </Text>
+              <Text style={styles.sectionTitle}>Selecione uma Data:</Text>
               {Platform.OS === 'web' ? (
                 <WebDatePicker
                   value={selectedDate || new Date()}
@@ -320,64 +302,78 @@ export default function Agendamento() {
                   minimumDate={new Date()}
                 />
               ) : (
-                <TouchableOpacity
-                  className="bg-gray-100 rounded-lg p-3 mb-6 mx-auto max-w-xs"
-                  onPress={() => {
-                    // Implementar seleção de data para mobile
-                    Alert.alert("Em desenvolvimento", "Seleção de data em desenvolvimento");
-                  }}
-                >
-                  <Text className="text-gray-700 text-center">
-                    {selectedDate ? selectedDate.toLocaleDateString('pt-BR') : "Selecione uma data"}
-                  </Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity
+                    style={styles.datePickerTouchable}
+                    onPress={() => setShowDatePicker(true)}
+                  >
+                    <Text style={styles.datePickerText}>
+                      {selectedDate ? selectedDate.toLocaleDateString('pt-BR') : "Selecione uma data"}
+                    </Text>
+                  </TouchableOpacity>
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate || new Date()}
+                      mode="date"
+                      display="default"
+                      minimumDate={new Date()}
+                      onChange={(event, date) => {
+                        setShowDatePicker(false);
+                        if (date) handleDateSelect(date);
+                      }}
+                    />
+                  )}
+                </>
               )}
             </>
           )}
 
           {step === 4 && (
             <>
-              <Text className="text-lg font-semibold text-gray-700 mb-4 text-center">
-                Confirme o Agendamento
-              </Text>
-              <View className="mt-6 p-4 bg-gray-50 rounded-md">
-                <Text className="font-medium text-lg mb-3 text-center">Resumo do Agendamento</Text>
-                <View className="space-y-2 text-sm">
-                  <View className="flex flex-row justify-between">
-                    <Text className="text-gray-600">Serviço:</Text>
-                    <Text className="font-medium">{selectedService?.name}</Text>
-                  </View>
-                  <View className="flex flex-row justify-between">
-                    <Text className="text-gray-600">Barbeiro:</Text>
-                    <Text className="font-medium">{selectedBarber?.name}</Text>
-                  </View>
-                  <View className="flex flex-row justify-between">
-                    <Text className="text-gray-600">Data:</Text>
-                    <Text className="font-medium">{selectedDate?.toLocaleDateString('pt-BR')}</Text>
-                  </View>
-                  <View className="flex flex-row justify-between pt-2 border-t border-gray-200">
-                    <Text className="text-gray-600">Valor:</Text>
-                    <Text className="font-bold text-yellow-500">
-                      R$ {selectedService?.price.toFixed(2)}
-                    </Text>
-                  </View>
+              <Text style={styles.sectionTitle}>Confirme o Agendamento</Text>
+              <View style={styles.summaryBox}>
+                <Text style={styles.summaryTitle}>Resumo do Agendamento</Text>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Serviço:</Text>
+                  <Text style={styles.summaryValue}>{selectedService?.name}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Barbeiro:</Text>
+                  <Text style={styles.summaryValue}>{selectedBarber?.name}</Text>
+                </View>
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Data:</Text>
+                  <Text style={styles.summaryValue}>{selectedDate?.toLocaleDateString('pt-BR')}</Text>
+                </View>
+                <View style={[styles.summaryRow, styles.summaryTotal]}>
+                  <Text style={styles.summaryLabel}>Valor:</Text>
+                  <Text style={styles.summaryTotalValue}>
+                    R$ {selectedService?.price.toFixed(2)}
+                  </Text>
                 </View>
               </View>
             </>
           )}
 
-          <View className="flex-row justify-between mt-8">
+          <View style={styles.buttonsRow}>
             <TouchableOpacity
               onPress={handleBack}
-              className={`border border-gray-300 rounded-lg px-4 py-2 ${step === 1 ? 'opacity-50' : 'hover:bg-gray-50'}`}
+              style={[styles.button, step === 1 ? styles.buttonDisabled : null]}
               disabled={step === 1}
             >
-              <Text className="text-gray-700">Voltar</Text>
+              <Text style={styles.buttonText}>Voltar</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={step === 4 ? handleSubmit : () => setStep(step + 1)}
-              className="bg-yellow-500 rounded-lg px-6 py-2 ml-auto hover:bg-yellow-600 transition-colors"
+              style={[
+                styles.button,
+                styles.buttonPrimary,
+                ((step === 1 && !selectedService) ||
+                  (step === 2 && !selectedBarber) ||
+                  (step === 3 && !selectedDate) ||
+                  (step === 4 && isSubmitting)) ? styles.buttonDisabled : null
+              ]}
               disabled={
                 (step === 1 && !selectedService) ||
                 (step === 2 && !selectedBarber) ||
@@ -388,7 +384,7 @@ export default function Agendamento() {
               {isSubmitting ? (
                 <ActivityIndicator color="white" />
               ) : (
-                <Text className="text-white font-medium">
+                <Text style={[styles.buttonText, styles.buttonTextPrimary]}>
                   {step === 4 ? "Confirmar Agendamento" : "Continuar"}
                 </Text>
               )}
@@ -400,3 +396,244 @@ export default function Agendamento() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    position: 'relative'
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  scrollContainer: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    paddingBottom: 100,
+    maxWidth: 800,
+    marginHorizontal: 'auto',
+    width: '100%',
+  },
+  redirectContainer: {
+    backgroundColor: '#d1fae5', // green-100
+    padding: 12,
+    marginBottom: 16,
+    borderRadius: 8,
+    alignSelf: 'center',
+    maxWidth: 400
+  },
+  redirectText: {
+    color: '#065f46', // green-800
+    textAlign: 'center',
+  },
+  stepsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 24,
+    maxWidth: '100%',
+    alignSelf: 'center',
+  },
+  stepItem: {
+    alignItems: 'center',
+    marginHorizontal: 4,
+    minWidth: 70
+  },
+  stepCircle: {
+    height: 40,
+    width: 40,
+    borderRadius: 20,
+    borderWidth: 2,
+    borderColor: '#d1d5db', // gray-300
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepCircleCurrent: {
+    backgroundColor: 'black',
+    borderColor: 'black'
+  },
+  stepCircleCompleted: {
+    backgroundColor: '#f59e0b', // yellow-500
+    borderColor: '#f59e0b',
+  },
+  stepCirclePending: {
+    backgroundColor: 'transparent',
+  },
+  stepNumber: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  stepNumberCurrent: {
+    color: 'white'
+  },
+  stepNumberCompleted: {
+    color: 'white'
+  },
+  stepNumberPending: {
+    color: '#9ca3af', // gray-400
+  },
+  stepTitle: {
+    marginTop: 8,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  stepTitleCurrent: {
+    color: 'black',
+    fontWeight: '700',
+  },
+  stepTitlePending: {
+    color: '#6b7280', // gray-500
+  },
+  stepContent: {
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 24,
+    maxWidth: 800,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  stepHeader: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#374151', // gray-800
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 12,
+    marginBottom: 24,
+  },
+  optionBox: {
+    width: 112,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  optionBoxDefault: {
+    backgroundColor: '#f3f4f6', // gray-100
+  },
+  optionBoxSelected: {
+    backgroundColor: '#f59e0b', // yellow-500
+    shadowColor: '#f59e0b',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  optionText: {
+    fontSize: 16,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  optionTextDefault: {
+    color: '#374151', // gray-700
+  },
+  optionTextSelected: {
+    color: 'white',
+  },
+  optionSubText: {
+    fontSize: 14,
+    marginTop: 4,
+  },
+  optionSubTextDefault: {
+    color: '#6b7280', // gray-500
+  },
+  optionSubTextSelected: {
+    color: 'white',
+  },
+  datePickerTouchable: {
+    backgroundColor: '#f3f4f6', // gray-100
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignSelf: 'center',
+    maxWidth: 300,
+    marginBottom: 24,
+  },
+  datePickerText: {
+    color: '#374151',
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  summaryBox: {
+    marginTop: 16,
+    backgroundColor: '#f9fafb', // gray-50
+    borderRadius: 8,
+    padding: 16,
+  },
+  summaryTitle: {
+    fontWeight: '600',
+    fontSize: 18,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 4,
+  },
+  summaryLabel: {
+    color: '#4b5563', // gray-600
+    fontSize: 16,
+  },
+  summaryValue: {
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  summaryTotal: {
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb', // gray-200
+    paddingTop: 8,
+    marginTop: 8,
+  },
+  summaryTotalValue: {
+    fontWeight: '700',
+    fontSize: 16,
+    color: '#f59e0b', // yellow-500
+  },
+  buttonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 32,
+  },
+  button: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#d1d5db', // gray-300
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 100,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  buttonPrimary: {
+    backgroundColor: '#f59e0b', // yellow-500
+    borderColor: '#f59e0b',
+    marginLeft: 12,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#374151', // gray-700
+  },
+  buttonTextPrimary: {
+    color: 'white',
+  }
+});
